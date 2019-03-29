@@ -10,10 +10,11 @@
          list_files/2,
          remove_directory/2,
          remove_file/2,
-         put_file/4,
+         put_file/3,
          get_file/2,
          file_info/2,
-         rename_file/3]).
+         rename_file/3,
+	 tree/1]).
 
 %% Behaviour Callbacks
 
@@ -52,8 +53,8 @@ remove_directory(Fs, Name) ->
 remove_file(Fs, Name) ->
     gen_server:call(Fs, {remove_file, Name}).
 
-put_file(Fs, Name, Mode, Data) ->
-    gen_server:call(Fs, {put_file, Name, Mode, Data}).
+put_file(Fs, Name, Data) ->
+    gen_server:call(Fs, {put_file, Name, Data}).
 
 get_file(Fs, Name) ->
     gen_serve:call(Fs, {get_file, Name}).
@@ -64,15 +65,120 @@ file_info(Fs, Name) ->
 rename_file(Fs, From, To) ->
     gen_server:call(Fs, {rename_file, From, To}).
 
+tree(Fs) ->
+    gen_server:call(Fs, tree).
+
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
 
-%% @hidden
-init(_) ->
-    {ok, #{}}.
+-record(dir, {
+	  parent :: any(),
+	  name :: string(),
+	  content = #{}:: map()
+	 }).
+
+-record(file, {
+	  name :: string(),
+	  content :: binary()
+	 }).
 
 %% @hidden
+init(_) ->
+    {ok, #dir{name="/", parent=none}}.
+
+%% @hidden
+handle_call(current_directory, _From, CWD=#dir{name = Name}) ->
+    {reply, {ok, Name}, CWD};
+
+handle_call({make_directory, Name}, _From, CWD=#dir{content=C0}) ->
+    case maps:is_key(Name, C0) of
+	true ->
+	    {reply, {error, already_exists}, CWD};
+	false ->
+	    Dir = #dir{name=Name, parent=error},
+	    C1 = C0#{Name => Dir},
+	    {reply, {ok, created}, CWD#dir{content=C1}}
+    end;
+
+handle_call({change_directory, "."}, _From, CWD=#dir{name=Name}) ->
+    {reply, {ok, Name}, CWD};
+
+handle_call({change_directory, ".."}, _From, CWD=#dir{parent=none}) ->
+    {reply, {error, root_dir}, CWD};
+
+handle_call({change_directory, ".."}, _From,  Tree=#dir{name=CWD, parent=Parent}) ->
+    #dir{name=Name, content=Content0} = Parent,
+    %% It is really imporant that we update the parent.
+    %% We might have updated the current data-structure.
+    %% If we don't update the parrent we will lose all changes.
+    %% This is because we have immutable data-structures.
+    Content1=Content0#{CWD => Tree},
+    {reply, {ok, Name}, Parent#dir{content=Content1}};
+
+handle_call({change_directory, Name}, _From, CWD=#dir{content=Content}) ->
+    case maps:get(Name, Content, badkey) of
+	badkey ->
+	    {reply, {error, missing_folder}, CWD};
+	#file{} ->
+	    {reply, {error, target_is_file}, CWD};
+	Target=#dir{} ->
+	    %% It is really important that we set
+	    %% the parent here. Because we have
+	    %% immutable data structures, this is
+	    %% the only up-to-date CWD
+	    {reply, ok, Target#dir{parent=CWD}}
+    end;
+
+handle_call(tree, _From, CWD) ->
+    priv_tree(CWD),
+    {reply, ok, CWD};
+
+handle_call({put_file, Name, Data}, _From, CWD=#dir{content=Content}) ->
+    case maps:get(Name, Content, badkey) of
+	badkey ->
+	    File = #file{name=Name, content=Data},
+	    {reply, {ok, Name}, CWD#dir{content=Content#{Name => File}}};
+	#file{} ->
+	    {reply, {error, file_collision}, CWD};
+	#dir{} ->
+	    {reply, {error, dir_collision}, CWD}
+    end;
+
+handle_call({remove_file, Name}, _From, CWD=#dir{content=Content}) ->
+    case maps:get(Name, Content, badkey) of
+	badkey ->
+	    {reply, {error, file_missing}, CWD};
+	#dir{} ->
+	    {reply, {error, not_a_file}, CWD};
+	#file{} ->
+	    {reply, {ok, Name}, CWD#dir{content=maps:remove(Name, Content)}}
+    end;
+
+handle_call({remove_directory, Name}, _From, CWD=#dir{content=Content}) ->
+    case maps:get(Name, Content, badkey) of
+	badkey ->
+	    {reply, {error, directory_missing}, CWD};
+	#file{} ->
+	    {reply, {error, not_a_directory}, CWD};
+	#dir{} ->
+	    {reply, {ok, Name}, CWD#dir{content=maps:remove(Name, Content)}}
+    end;
+
+handle_call({rename_file, From, To}, _From, CWD=#dir{content=Content}) ->
+    FromStatus = maps:get(From, Content, badkey),
+    ToStatus = maps:get(To, Content, badkey),
+
+    case rename(Content, From, To, FromStatus, ToStatus) of
+	{ok, Name, NewContent} ->
+	    {reply, {ok, Name}, CWD#dir{content=NewContent}};
+	{error, Why, Content} ->
+	    {reply, {error, Why}, CWD}
+    end;
+
+handle_call({file_info, _Name}, _From, State) ->
+    {reply, {error, not_implemented}, State};
+
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
@@ -85,9 +191,39 @@ handle_info(_What, State) ->
     {noreply, State}.
 
 %% @hidden
-terminate(_Reason, _State) ->
+terminate(_Reason, State) ->
+    io:fwrite("TERMINATE WITH ~p~n", [State]),
     ok.
 
 %% @hidden
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
+
+%%------------------------------------------------------------------------------
+%% Private
+%%------------------------------------------------------------------------------
+
+priv_tree(Tree) ->
+    priv_tree(Tree, 0).
+
+priv_tree(#dir{name = Name, content = Tree}, N) ->
+    priv_print_dir(Name, N),
+    [priv_tree(Node, N+1) || Node <- maps:values(Tree)];
+
+priv_tree(#file{name = Name, content = Content}, N) ->
+    priv_print_file(Name, Content, N).
+
+priv_print_dir(Name, N) ->
+    Gap = ["  " || _ <- lists:seq(1, N)],
+    io:fwrite("~s|---~s~n", [Gap, Name]).
+
+priv_print_file(Name, _Content, N) ->
+    Gap = [" " || _ <- lists:seq(1, N+1)],
+    io:fwrite("~s|---~s~n", [Gap, Name]).
+
+rename(Content, _From, _To, badkey, _) ->
+    {error, file_missing, Content};
+rename(Content, From, To, Item, badkey) ->
+    {ok, To, maps:put(To, Item, maps:remove(From, Content))};
+rename(Content, _From, _To, _, _Item) ->
+    {error, collision, Content}.

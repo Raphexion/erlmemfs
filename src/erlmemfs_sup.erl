@@ -8,7 +8,8 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0]).
+-export([start_link/0,
+	 create_erlmemfs/0]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -22,13 +23,24 @@
 start_link() ->
     supervisor:start_link({local, ?SERVER}, ?MODULE, []).
 
+create_erlmemfs() ->
+    supervisor:start_child(?MODULE, []).
+
 %%====================================================================
 %% Supervisor callbacks
 %%====================================================================
 
-%% Child :: {Id,StartFunc,Restart,Shutdown,Type,Modules}
 init([]) ->
-    {ok, { {one_for_all, 0, 1}, []} }.
+    SupFlags = #{strategy => simple_one_for_one,
+                 intensity => 0,
+                 period => 1},
+
+    ErlMemFs = #{id => erlmemfs,
+		 start => {erlmemfs, start_link, []}},
+
+    Children = [ErlMemFs],
+
+    {ok, {SupFlags, Children}}.
 
 %%====================================================================
 %% Internal functions
