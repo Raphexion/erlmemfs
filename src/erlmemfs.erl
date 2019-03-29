@@ -169,7 +169,7 @@ handle_call({rename_file, From, To}, _From, CWD=#dir{content=Content}) ->
     FromStatus = maps:get(From, Content, badkey),
     ToStatus = maps:get(To, Content, badkey),
 
-    case rename(Content, From, To, FromStatus, ToStatus) of
+    case priv_rename_file(Content, From, To, FromStatus, ToStatus) of
 	{ok, Name, NewContent} ->
 	    {reply, {ok, Name}, CWD#dir{content=NewContent}};
 	{error, Why, Content} ->
@@ -221,9 +221,15 @@ priv_print_file(Name, _Content, N) ->
     Gap = [" " || _ <- lists:seq(1, N+1)],
     io:fwrite("~s|---~s~n", [Gap, Name]).
 
-rename(Content, _From, _To, badkey, _) ->
+priv_rename_file(Content, _From, _To, badkey, _ToStatus) ->
     {error, file_missing, Content};
-rename(Content, From, To, Item, badkey) ->
-    {ok, To, maps:put(To, Item, maps:remove(From, Content))};
-rename(Content, _From, _To, _, _Item) ->
+
+priv_rename_file(Content, _From, _To, #dir{}, _ToStatus) ->
+    {error, not_a_file, Content};
+
+priv_rename_file(Content, From, To, File0=#file{}, badkey) ->
+    File1 = File0#file{name = To},
+    {ok, To, maps:put(To, File1, maps:remove(From, Content))};
+
+priv_rename_file(Content, _From, _To, _FromStatus, _ToStatus) ->
     {error, collision, Content}.
