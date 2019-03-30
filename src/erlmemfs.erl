@@ -148,9 +148,9 @@ handle_call({put_file, Name, Data}, _From, CWD=#dir{content=Content}) ->
 handle_call({remove_file, Name}, _From, CWD=#dir{content=Content}) ->
     case maps:get(Name, Content, badkey) of
 	badkey ->
-	    {reply, {error, file_missing}, CWD};
+	    {reply, {error, not_found}, CWD};
 	#dir{} ->
-	    {reply, {error, not_a_file}, CWD};
+	    {reply, {error, not_directory}, CWD};
 	#file{} ->
 	    {reply, {ok, Name}, CWD#dir{content=maps:remove(Name, Content)}}
     end;
