@@ -127,7 +127,7 @@ handle_call({change_directory, Name}, _From, CWD=#dir{content=Content}) ->
 	    %% the parent here. Because we have
 	    %% immutable data structures, this is
 	    %% the only up-to-date CWD
-	    {reply, ok, Target#dir{parent=CWD}}
+	    {reply, {ok, Name}, Target#dir{parent=CWD}}
     end;
 
 handle_call(tree, _From, CWD) ->
@@ -155,6 +155,7 @@ handle_call({remove_file, Name}, _From, CWD=#dir{content=Content}) ->
 	    {reply, {ok, Name}, CWD#dir{content=maps:remove(Name, Content)}}
     end;
 
+%% TODO, handle unempty directory
 handle_call({remove_directory, Name}, _From, CWD=#dir{content=Content}) ->
     case maps:get(Name, Content, badkey) of
 	badkey ->
