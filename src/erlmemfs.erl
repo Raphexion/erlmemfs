@@ -185,6 +185,22 @@ handle_call({rename_file, From, To}, _From, CWD=#dir{content=Content}) ->
 	    {reply, {error, Why}, CWD}
     end;
 
+handle_call(list_files, _From, CWD=#dir{content=Content}) ->
+    {reply, {ok, maps:keys(Content)}, CWD};
+
+handle_call({list_files, "."}, _From, CWD=#dir{content=Content}) ->
+    {reply, {ok, maps:keys(Content)}, CWD};
+
+handle_call({list_files, Name}, _From, CWD=#dir{content=Content}) ->
+    case maps:get(Name, Content, badkey) of
+	badkey ->
+	    {reply, {error, missing}, CWD};
+	#file{name=Name} ->
+	    {reply, {ok, [Name]}, CWD};
+	#dir{content=SubContent} ->
+	    {reply, {ok, maps:keys(SubContent)}, CWD}
+    end;
+
 handle_call({file_info, _Name}, _From, State) ->
     {reply, {error, not_implemented}, State};
 
