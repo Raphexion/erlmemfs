@@ -15,6 +15,18 @@ prop_test() ->
 		    andalso gone(Fs, Name)
 	    end).
 
+prop_tree() ->
+    ?FORALL(Names, non_empty(list(non_empty(string()))),
+	    begin
+		{ok, Fs} = erlmemfs:start_link(),
+		lists:map(fun(Name) ->
+				  erlmemfs:make_directory(Fs, Name),
+				  erlmemfs:change_directory(Fs, Name)
+			  end,
+			  Names),
+		length(Names) =:= count_dirs(Fs)
+	    end).
+
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
