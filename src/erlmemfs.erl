@@ -15,6 +15,7 @@
          file_info/2,
          rename_file/3,
 	 tree/1]).
+-export([count/1]).
 
 %% Behaviour Callbacks
 
@@ -68,6 +69,9 @@ rename_file(Fs, From, To) ->
 tree(Fs) ->
     gen_server:call(Fs, tree).
 
+count(Fs) ->
+    gen_server:call(Fs, count).
+
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
@@ -107,14 +111,8 @@ handle_call({change_directory, "."}, _From, CWD=#dir{name=Name}) ->
 handle_call({change_directory, ".."}, _From, CWD=#dir{parent=none}) ->
     {reply, {error, root_dir}, CWD};
 
-handle_call({change_directory, ".."}, _From,  Tree=#dir{name=CWD, parent=Parent}) ->
-    #dir{name=Name, content=Content0} = Parent,
-    %% It is really imporant that we update the parent.
-    %% We might have updated the current data-structure.
-    %% If we don't update the parrent we will lose all changes.
-    %% This is because we have immutable data-structures.
-    Content1=Content0#{CWD => Tree},
-    {reply, {ok, Name}, Parent#dir{content=Content1}};
+handle_call({change_directory, ".."}, _From,  CWD=#dir{name=Name}) ->
+    {reply, {ok, Name}, move_up(CWD)};
 
 handle_call({change_directory, Name}, _From, CWD=#dir{content=Content}) ->
     case maps:get(Name, Content, badkey) of
@@ -190,6 +188,9 @@ handle_call({rename_file, From, To}, _From, CWD=#dir{content=Content}) ->
 handle_call({file_info, _Name}, _From, State) ->
     {reply, {error, not_implemented}, State};
 
+handle_call(count, _From, State) ->
+    {reply, {ok, priv_count(find_root(State))}, State};
+
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
 
@@ -244,3 +245,28 @@ priv_rename_file(Content, From, To, File0=#file{}, badkey) ->
 
 priv_rename_file(Content, _From, _To, _FromStatus, _ToStatus) ->
     {error, collision, Content}.
+
+%%------------------------------------------------------------------------------
+%% Private
+%%------------------------------------------------------------------------------
+
+%% @doc Whenever we move back in the tree,
+%% we must update the parent's copy of the tree.
+%% Otherwise all changes are lost.
+%% Thus, only do it at this place in the code.
+move_up(Tree=#dir{name=CWD, parent=Parent}) ->
+    #dir{content=Content} = Parent,
+    Parent#dir{content=Content#{CWD => Tree}}.
+
+find_root(Node=#dir{name="/", parent=none}) ->
+    Node;
+find_root(Node) ->
+    find_root(move_up(Node)).
+
+priv_count(#file{}) ->
+    #{file => 1, dir => 0};
+priv_count(#dir{content=Content}) ->
+    lists:foldl(fun combine/2, #{file => 0, dir => 1}, lists:map(fun priv_count/1, maps:values(Content))).
+
+combine(#{file := F0, dir := D0}, #{file := F1, dir := D1}) ->
+    #{file => F0 + F1, dir => D0 + D1}.
