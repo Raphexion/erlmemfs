@@ -98,7 +98,7 @@ handle_call({make_directory, Name}, _From, CWD=#dir{content=C0}) ->
 	false ->
 	    Dir = #dir{name=Name, parent=error},
 	    C1 = C0#{Name => Dir},
-	    {reply, {ok, created}, CWD#dir{content=C1}}
+	    {reply, {ok, Name}, CWD#dir{content=C1}}
     end;
 
 handle_call({change_directory, "."}, _From, CWD=#dir{name=Name}) ->
