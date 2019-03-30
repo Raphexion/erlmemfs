@@ -57,7 +57,7 @@ put_file(Fs, Name, Data) ->
     gen_server:call(Fs, {put_file, Name, Data}).
 
 get_file(Fs, Name) ->
-    gen_serve:call(Fs, {get_file, Name}).
+    gen_server:call(Fs, {get_file, Name}).
 
 file_info(Fs, Name) ->
     gen_server:call(Fs, {file_info, Name}).
@@ -143,6 +143,16 @@ handle_call({put_file, Name, Data}, _From, CWD=#dir{content=Content}) ->
 	    {reply, {error, file_collision}, CWD};
 	#dir{} ->
 	    {reply, {error, dir_collision}, CWD}
+    end;
+
+handle_call({get_file, Name}, _From, CWD=#dir{content=Content}) ->
+    case maps:get(Name, Content, badkey) of
+	badkey ->
+	    {reply, {error, missing_file}, CWD};
+	#dir{} ->
+	    {reply, {error, target_is_dir}, CWD};
+	#file{content=Data} ->
+	    {reply, {ok, Data}, CWD}
     end;
 
 handle_call({remove_file, Name}, _From, CWD=#dir{content=Content}) ->
