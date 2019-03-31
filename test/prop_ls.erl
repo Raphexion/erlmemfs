@@ -20,11 +20,11 @@ prop_test() ->
 make_items(_Fs, []) ->
     ok;
 
-make_items(Fs, [{Name, f}|T]) ->
+make_items(Fs, [{file, Name}|T]) ->
     erlmemfs:put_file(Fs, Name, <<"not important">>),
     make_items(Fs, T);
 
-make_items(Fs, [{Name, d}|T]) ->
+make_items(Fs, [{dir, Name}|T]) ->
     erlmemfs:make_directory(Fs, Name),
     make_items(Fs, T).
 
@@ -33,7 +33,7 @@ names(Items) ->
 
 names([], Acc) ->
     Acc;
-names([{Name, _}|T], Acc) ->
+names([{_, Name}|T], Acc) ->
     names(T, [Name|Acc]).
 
 %%%%%%%%%%%%%%%%%%
@@ -46,7 +46,7 @@ unique(Items) ->
     N =:= M.
 
 item() ->
-    {non_empty(string()), oneof([f, d])}.
+    {oneof([file, dir]), non_empty(string())}.
 
 items() ->
     ?SUCHTHAT(Items, non_empty(list(item())), unique(names(Items))).
