@@ -16,7 +16,7 @@ prop_test() ->
 	    end).
 
 prop_tree() ->
-    ?FORALL(Names, non_empty(list(non_empty(string()))),
+    ?FORALL(Names, folders(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
 		lists:map(fun(Name) ->
@@ -43,3 +43,15 @@ gone(Fs, Name) ->
 count_dirs(Fs) ->
     {ok, #{dir := N}} = erlmemfs:count(Fs),
     N.
+
+%%%%%%%%%%%%%%%%%%
+%%% Generators %%%
+%%%%%%%%%%%%%%%%%%
+folder() ->
+    ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
+
+folders() ->
+    non_empty(list(folder())).
+
+invalid(Folder) ->
+    lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").

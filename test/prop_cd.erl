@@ -45,7 +45,10 @@ test_paths(Fs, [Path|Rest]) ->
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
 folder() ->
-    ?SUCHTHAT(Folder, non_empty(string()), not lists:member($/, Folder)).
+    ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
 
 folders() ->
     non_empty(list(folder())).
+
+invalid(Folder) ->
+    lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").
