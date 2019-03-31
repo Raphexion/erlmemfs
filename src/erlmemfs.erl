@@ -108,11 +108,24 @@ handle_call({make_directory, Name}, _From, CWD=#dir{content=C0}) ->
 handle_call({change_directory, "."}, _From, CWD=#dir{name=Name}) ->
     {reply, {ok, Name}, CWD};
 
+handle_call({change_directory, "/"}, _From, CWD) ->
+    {reply, {ok, "/"}, find_root(CWD)};
+
 handle_call({change_directory, ".."}, _From, CWD=#dir{parent=none}) ->
     {reply, {error, root_dir}, CWD};
 
 handle_call({change_directory, ".."}, _From,  CWD=#dir{name=Name}) ->
     {reply, {ok, Name}, move_up(CWD)};
+
+handle_call({change_directory, Abspath=[$/|_]}, _From, CWD) ->
+    Root = find_root(CWD),
+    Path = string:tokens(Abspath, "/"),
+    case move_down(Root, Path) of
+	{ok, Folder=#dir{name=Name}} ->
+	    {reply, {ok, Name}, Folder};
+	Error ->
+	    {reply, Error, CWD}
+    end;
 
 handle_call({change_directory, Name}, _From, CWD=#dir{content=Content}) ->
     case maps:get(Name, Content, badkey) of
@@ -272,6 +285,18 @@ priv_rename_file(Content, _From, _To, _FromStatus, _ToStatus) ->
 move_up(Tree=#dir{name=CWD, parent=Parent}) ->
     #dir{content=Content} = Parent,
     Parent#dir{content=Content#{CWD => Tree}}.
+
+move_down(Tree=#dir{}, []) ->
+    {ok, Tree};
+move_down(#dir{content=Content}, [Head|Tail]) ->
+    case maps:get(Head, Content, badkey) of
+	badkey ->
+	    {error, missing_folder};
+	#file{} ->
+	    {error, missing_folder};
+	Folder=#dir{} ->
+	    move_down(Folder, Tail)
+    end.
 
 find_root(Node=#dir{name="/", parent=none}) ->
     Node;
