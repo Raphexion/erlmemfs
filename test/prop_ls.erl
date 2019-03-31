@@ -10,7 +10,7 @@ prop_test() ->
 		{ok, Fs} = erlmemfs:start_link(),
 		make_items(Fs, Items),
 		{ok, Ls} = erlmemfs:list_files(Fs),
-		length(Items) =:= length(Ls) andalso same(names(Items), Ls)
+		length(Items) =:= length(Ls) andalso same(Items, Ls)
 	    end).
 
 %%%%%%%%%%%%%%%

@@ -43,7 +43,7 @@ change_directory(Fs, Name) ->
     gen_server:call(Fs, {change_directory, Name}).
 
 list_files(Fs) ->
-    gen_server:call(Fs, list_files).
+    gen_server:call(Fs, {list_files, "."}).
 
 list_files(Fs, Name) ->
     gen_server:call(Fs, {list_files, Name}).
@@ -185,11 +185,9 @@ handle_call({rename_file, From, To}, _From, CWD=#dir{content=Content}) ->
 	    {reply, {error, Why}, CWD}
     end;
 
-handle_call(list_files, _From, CWD=#dir{content=Content}) ->
-    {reply, {ok, maps:keys(Content)}, CWD};
-
-handle_call({list_files, "."}, _From, CWD=#dir{content=Content}) ->
-    {reply, {ok, maps:keys(Content)}, CWD};
+handle_call({list_files, "."}, _From, CWD) ->
+    Listing = priv_ls(CWD),
+    {reply, {ok, Listing}, CWD};
 
 handle_call({list_files, Name}, _From, CWD=#dir{content=Content}) ->
     case maps:get(Name, Content, badkey) of
@@ -197,8 +195,9 @@ handle_call({list_files, Name}, _From, CWD=#dir{content=Content}) ->
 	    {reply, {error, missing}, CWD};
 	#file{name=Name} ->
 	    {reply, {ok, [Name]}, CWD};
-	#dir{content=SubContent} ->
-	    {reply, {ok, maps:keys(SubContent)}, CWD}
+	Dir=#dir{} ->
+	    Listing = priv_ls(Dir),
+	    {reply, {ok, Listing}, CWD}
     end;
 
 handle_call({file_info, _Name}, _From, State) ->
@@ -295,3 +294,13 @@ priv_count(#dir{content=Content}, Dir) ->
     lists:foldl(fun combine/2,
 		#{file => 0, dir => Dir},
 		lists:map(fun priv_count/1, maps:values(Content))).
+
+%%
+priv_ls(#dir{content=Content}) ->
+    lists:map(fun node_name/1, maps:values(Content)).
+
+%% @doc Extract name of both files and dirs
+node_name(#file{name=Name}) ->
+    {file, Name};
+node_name(#dir{name=Name}) ->
+    {dir, Name}.
