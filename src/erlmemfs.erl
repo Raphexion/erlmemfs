@@ -1,5 +1,7 @@
 -module(erlmemfs).
 -behaviour(gen_server).
+-include("erlmemfs.hrl").
+
 
 %% API
 -export([start_link/0]).
@@ -76,17 +78,6 @@ count(Fs) ->
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
 
--record(dir, {
-	  parent :: any(),
-	  name :: string(),
-	  content = #{}:: map()
-	 }).
-
--record(file, {
-	  name :: string(),
-	  content :: binary()
-	 }).
-
 %% @hidden
 init(_) ->
     {ok, #dir{name="/", parent=none}}.
@@ -109,18 +100,18 @@ handle_call({change_directory, "."}, _From, CWD=#dir{name=Name}) ->
     {reply, {ok, Name}, CWD};
 
 handle_call({change_directory, "/"}, _From, CWD) ->
-    {reply, {ok, "/"}, find_root(CWD)};
+    {reply, {ok, "/"}, support:find_root(CWD)};
 
 handle_call({change_directory, ".."}, _From, CWD=#dir{parent=none}) ->
     {reply, {error, root_dir}, CWD};
 
 handle_call({change_directory, ".."}, _From,  CWD=#dir{name=Name}) ->
-    {reply, {ok, Name}, move_up(CWD)};
+    {reply, {ok, Name}, support:move_up(CWD)};
 
 handle_call({change_directory, Abspath=[$/|_]}, _From, CWD) ->
-    Root = find_root(CWD),
+    Root = support:find_root(CWD),
     Path = string:tokens(Abspath, "/"),
-    case move_down(Root, Path) of
+    case support:move_down(Root, Path) of
 	{ok, Folder=#dir{name=Name}} ->
 	    {reply, {ok, Name}, Folder};
 	Error ->
@@ -217,7 +208,7 @@ handle_call({file_info, _Name}, _From, State) ->
     {reply, {error, not_implemented}, State};
 
 handle_call(count, _From, State) ->
-    {reply, {ok, priv_count(find_root(State))}, State};
+    {reply, {ok, priv_count(support:find_root(State))}, State};
 
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
@@ -278,30 +269,6 @@ priv_rename_file(Content, _From, _To, _FromStatus, _ToStatus) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-%% @doc Whenever we move back in the tree,
-%% we must update the parent's copy of the tree.
-%% Otherwise all changes are lost.
-%% Thus, only do it at this place in the code.
-move_up(Tree=#dir{name=CWD, parent=Parent}) ->
-    #dir{content=Content} = Parent,
-    Parent#dir{content=Content#{CWD => Tree}}.
-
-move_down(Tree=#dir{}, []) ->
-    {ok, Tree};
-move_down(#dir{content=Content}, [Head|Tail]) ->
-    case maps:get(Head, Content, badkey) of
-	badkey ->
-	    {error, missing_folder};
-	#file{} ->
-	    {error, missing_folder};
-	Folder=#dir{} ->
-	    move_down(Folder, Tail)
-    end.
-
-find_root(Node=#dir{name="/", parent=none}) ->
-    Node;
-find_root(Node) ->
-    find_root(move_up(Node)).
 
 priv_count(#file{}) ->
     #{file => 1, dir => 0};
@@ -329,3 +296,4 @@ node_name(#file{name=Name}) ->
     {file, Name};
 node_name(#dir{name=Name}) ->
     {dir, Name}.
+
