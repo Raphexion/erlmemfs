@@ -1,11 +1,18 @@
 -module(support).
 -include("erlmemfs.hrl").
 
--export([move_up/1,
+-export([root/0,
+	 move_up/1,
 	 move_ups/2,
 	 find_root/1,
 	 move_down/2,
-	 path_to_folders/1]).
+	 path_to_parts/1,
+	 mkdirs/2]).
+
+%% @doc root
+
+root() ->
+    #dir{name="/", parent=none, content=#{}}.
 
 %% @doc move_up
 %% Whenever we move back in the tree,
@@ -41,24 +48,39 @@ find_root(Node) ->
 
 move_down(Tree=#dir{}, []) ->
     {ok, Tree};
-move_down(#dir{content=Content}, [Head|Tail]) ->
+move_down(CWD=#dir{content=Content}, [Head|Tail]) ->
     case maps:get(Head, Content, badkey) of
 	badkey ->
 	    {error, missing_folder};
 	#file{} ->
 	    {error, missing_folder};
 	Folder=#dir{} ->
-	    move_down(Folder, Tail)
+	    move_down(Folder#dir{parent=CWD}, Tail)
     end.
 
-%% @doc path_to_folders
+%% @doc path_to_parts
 %% Turn a path into a list of folders
 
-path_to_folders(CWD) ->
-    path_to_folders(CWD, []).
+path_to_parts(CWD) ->
+    path_to_parts(CWD, []).
 
-path_to_folders(#dir{name="/", parent=none}, Folders) ->
+path_to_parts(#dir{name="/", parent=none}, Folders) ->
     lists:reverse(Folders);
-path_to_folders(CWD=#dir{name=Name}, Folders) ->
-    path_to_folders(move_up(CWD), [Name|Folders]).
+path_to_parts(CWD=#dir{name=Name}, Folders) ->
+    path_to_parts(move_up(CWD), [Name|Folders]).
 
+%% @doc path_to_parts
+%% Turn a path into a list of folders
+
+mkdirs(CWD, []) ->
+    CWD;
+mkdirs(CWD0=#dir{content=Content}, [Name|Tail]) ->
+    case maps:is_key(Name, Content) of
+	true ->
+	    {error, already_exists};
+	false ->
+	    Dir = #dir{name=Name},
+	    CWD1 = CWD0#dir{content=Content#{Name=>Dir}},
+	    {ok, Next} = move_down(CWD1, [Name]),
+	    mkdirs(Next, Tail)
+    end.
