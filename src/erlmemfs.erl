@@ -208,7 +208,7 @@ handle_call({file_info, _Name}, _From, State) ->
     {reply, {error, not_implemented}, State};
 
 handle_call(count, _From, State) ->
-    {reply, {ok, priv_count(support:find_root(State))}, State};
+    {reply, {ok, stats:count(support:find_root(State))}, State};
 
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
@@ -268,24 +268,6 @@ priv_rename_file(Content, _From, _To, _FromStatus, _ToStatus) ->
 %%------------------------------------------------------------------------------
 %% Private
 %%------------------------------------------------------------------------------
-
-
-priv_count(#file{}) ->
-    #{file => 1, dir => 0};
-priv_count(Node=#dir{parent=none}) ->
-    priv_count(Node, 0);
-priv_count(Node=#dir{}) ->
-    priv_count(Node, 1).
-
-combine(#{file := F0, dir := D0}, #{file := F1, dir := D1}) ->
-    #{file => F0 + F1, dir => D0 + D1}.
-
-priv_count(#dir{content=Content}, Dir) ->
-    %% root node should not count towards
-    %% count, hence Dir=0. Otherwise Dir=1
-    lists:foldl(fun combine/2,
-		#{file => 0, dir => Dir},
-		lists:map(fun priv_count/1, maps:values(Content))).
 
 %%
 priv_ls(#dir{content=Content}) ->

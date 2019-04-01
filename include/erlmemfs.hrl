@@ -9,5 +9,7 @@
 	  content :: binary()
 	 }).
 
+-define(ROOT, #dir{name="/", parent=none}).
+
 -type dir() :: #dir{}.
 -type file() :: #file{}.
