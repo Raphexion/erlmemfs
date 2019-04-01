@@ -1,7 +1,7 @@
 -record(dir, {
-	  parent :: any(),
+	  parent :: term(),
 	  name :: string(),
-	  content = #{}:: map()
+	  content = #{} :: map()
 	 }).
 
 -record(file, {
