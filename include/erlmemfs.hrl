@@ -8,3 +8,6 @@
 	  name :: string(),
 	  content :: binary()
 	 }).
+
+-type dir() :: #dir{}.
+-type file() :: #file{}.
