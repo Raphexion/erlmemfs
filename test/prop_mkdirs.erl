@@ -10,8 +10,7 @@ prop_test() ->
 	    begin
 		Leaf = support:mkdirs(support:root(), Folders),
 		Tree = support:find_root(Leaf),
-		Res = #{dir := N, file := 0} = stats:count(Tree),
-		io:fwrite("RES: ~p <- ~p~n", [Res, Folders]),
+		#{dir := N, file := 0} = stats:count(Tree),
 		N =:= length(Folders)
 	    end).
 
