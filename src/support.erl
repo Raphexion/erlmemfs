@@ -7,7 +7,8 @@
 	 find_root/1,
 	 move_down/2,
 	 path_to_parts/1,
-	 mkdirs/2]).
+	 mkdirs/2,
+	 backup_dir/1]).
 
 %% @doc root
 
@@ -83,4 +84,18 @@ mkdirs(CWD0=#dir{content=Content}, [Name|Tail]) ->
 	    CWD1 = CWD0#dir{content=Content#{Name=>Dir}},
 	    {ok, Next} = move_down(CWD1, [Name]),
 	    mkdirs(Next, Tail)
+    end.
+
+%% @doc backup_cwd
+
+backup_dir(CurrentDir) ->
+    Backup = path_to_parts(CurrentDir),
+    fun(NewDir) ->
+	    Root = find_root(NewDir),
+	    case move_down(Root, Backup) of
+		{ok, Fresh} ->
+		    Fresh;
+		_ ->
+		    CurrentDir
+	    end
     end.
