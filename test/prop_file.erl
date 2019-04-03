@@ -5,7 +5,7 @@
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
 prop_file_test() ->
-    ?FORALL({Name, Content}, {file(), content()},
+    ?FORALL({Name, Content}, name_and_content(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
 		combine(Fs, Name, Content, [fun put_file/3,
@@ -15,7 +15,7 @@ prop_file_test() ->
 	    end).
 
 prop_file_nested_test() ->
-    ?FORALL({Folders, Name, Content}, {folders(), file(), content()},
+    ?FORALL({Folders, Name, Content}, folders_file_and_content(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
 		Path = "/" ++ string:join(Folders, "/"),
@@ -31,13 +31,6 @@ prop_file_nested_test() ->
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
-
-make_path(_Fs, []) ->
-    ok;
-make_path(Fs, [H|T]) ->
-    erlmemfs:make_directory(Fs, H),
-    erlmemfs:change_directory(Fs, H),
-    make_path(Fs, T).
 
 combine(_Fs, _Name, _Content, []) ->
     true;
@@ -65,17 +58,11 @@ correct_count(Fs, Folders, NbFiles) ->
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
 
-file() ->
-    non_empty(string()).
+name_and_content() ->
+    {prop_generators:file(), 
+     prop_generators:content()}.
 
-content() ->
-    non_empty(binary()).
-
-folder() ->
-    ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
-
-folders() ->
-    non_empty(list(folder())).
-
-invalid(Folder) ->
-    lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").
+folders_file_and_content() ->
+    {prop_generators:folders(), 
+     prop_generators:file(), 
+     prop_generators:content()}.
