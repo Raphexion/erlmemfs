@@ -86,7 +86,7 @@ path_to_parts(CWD=#dir{name=Name}, Folders) ->
 %% @doc path_to_parts
 %% Turn a path into a list of folders
 
--spec mkdirs(dir(), list(string())) -> {'ok', dir()} | {'error', 'already_exists'}.
+-spec mkdirs(dir(), list(string())) -> {'ok', dir()} | {'error', 'file_collision'}.
 
 mkdirs(CWD, []) ->
     {ok, CWD};
@@ -102,6 +102,8 @@ mkdirs(CWD0=#dir{content=Content}, [Name|Tail]) ->
     end.
 
 %% @doc backup_cwd
+
+-spec backup_dir(dir()) -> fun((dir()) -> dir()).
 
 backup_dir(CurrentDir) ->
     Backup = path_to_parts(CurrentDir),
