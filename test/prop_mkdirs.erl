@@ -6,7 +6,7 @@
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
 prop_support_root_test() ->
-    ?FORALL(Folders, folders(),
+    ?FORALL(Folders, prop_generators:folders(),
 	    begin
 		{ok, Leaf} = support:mkdirs(support:root(), Folders),
 		Tree = support:find_root(Leaf),
@@ -15,7 +15,7 @@ prop_support_root_test() ->
 	    end).
 
 prop_support_non_root_test() ->
-    ?FORALL(Folders, folders(),
+    ?FORALL(Folders, prop_generators:folders(),
 	    begin
 		Root = support:root(),
 		Base = #dir{name="base", parent=Root},
@@ -26,7 +26,7 @@ prop_support_non_root_test() ->
 	    end).
 
 prop_root_test() ->
-    ?FORALL(Folders, folders(),
+    ?FORALL(Folders, prop_generators:folders(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
 		Path = "/" ++ string:join(Folders, "/"),
@@ -42,12 +42,3 @@ prop_root_test() ->
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
-
-folder() ->
-    ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
-
-folders() ->
-    non_empty(list(folder())).
-
-invalid(Folder) ->
-    lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").
