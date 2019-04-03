@@ -1,8 +1,16 @@
 -module(prop_generators).
 -include_lib("proper/include/proper.hrl").
 
--export([folder/0,
+-export([file/0,
+	 content/0,
+	 folder/0,
 	 folders/0]).
+
+file() ->
+    non_empty(string()).
+
+content() ->
+    non_empty(binary()).
 
 folder() ->
     ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
