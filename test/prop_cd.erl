@@ -5,7 +5,7 @@
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
 prop_test() ->
-    ?FORALL(Folders, folders(),
+    ?FORALL(Folders, prop_generators:folders(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
 		Path = "/" ++ string:join(Folders, "/"),
@@ -39,11 +39,3 @@ test_paths(Fs, [Path|Rest]) ->
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
-folder() ->
-    ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
-
-folders() ->
-    non_empty(list(folder())).
-
-invalid(Folder) ->
-    lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").
