@@ -18,6 +18,7 @@
          rename_file/3,
 	 tree/1]).
 -export([count/1]).
+-export([debug/1]).
 
 %% Behaviour Callbacks
 
@@ -73,6 +74,9 @@ tree(Fs) ->
 
 count(Fs) ->
     gen_server:call(Fs, count).
+
+debug(Fs) ->
+    gen_server:call(Fs, debug).
 
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
@@ -209,6 +213,9 @@ handle_call({file_info, _Name}, _From, State) ->
 
 handle_call(count, _From, State) ->
     {reply, {ok, stats:count(support:find_root(State))}, State};
+
+handle_call(debug, _From, State) ->
+    {reply, {ok, State}, State};
 
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
