@@ -29,9 +29,10 @@ prop_root_test() ->
     ?FORALL(Folders, folders(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
-		Root = support:root(),
 		Path = "/" ++ string:join(Folders, "/"),
-		true
+		erlmemfs:make_directory(Fs, Path),
+		{ok, #{dir := N, file := 0}} = erlmemfs:count(Fs),
+		N =:= length(Folders)
 	    end).
 
 %%%%%%%%%%%%%%%
