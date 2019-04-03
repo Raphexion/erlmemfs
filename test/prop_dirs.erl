@@ -6,7 +6,7 @@
 %%%%%%%%%%%%%%%%%%
 prop_dirs_test() ->
     {ok, Fs} = erlmemfs:start_link(),
-    ?FORALL(Name, folder(),
+    ?FORALL(Name, prop_generators:folder(),
 	    begin
 		make(Fs, Name)
 		    andalso 1 =:= count_dirs(Fs)
@@ -16,7 +16,7 @@ prop_dirs_test() ->
 	    end).
 
 prop_dirs_tree() ->
-    ?FORALL(Names, folders(),
+    ?FORALL(Names, prop_generators:folders(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
 		lists:map(fun(Name) ->
@@ -48,11 +48,3 @@ count_dirs(Fs) ->
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
-folder() ->
-    ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
-
-folders() ->
-    non_empty(list(folder())).
-
-invalid(Folder) ->
-    lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").
