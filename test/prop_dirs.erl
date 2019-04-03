@@ -4,9 +4,9 @@
  %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
-prop_test() ->
+prop_dirs_test() ->
     {ok, Fs} = erlmemfs:start_link(),
-    ?FORALL(Name, string(),
+    ?FORALL(Name, folder(),
 	    begin
 		make(Fs, Name)
 		    andalso 1 =:= count_dirs(Fs)
@@ -15,7 +15,7 @@ prop_test() ->
 		    andalso gone(Fs, Name)
 	    end).
 
-prop_tree() ->
+prop_dirs_tree() ->
     ?FORALL(Names, folders(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
@@ -41,6 +41,7 @@ gone(Fs, Name) ->
     {error, directory_missing} =:= erlmemfs:remove_directory(Fs, Name).
 
 count_dirs(Fs) ->
+    erlmemfs:change_directory(Fs, "/"),
     {ok, #{dir := N}} = erlmemfs:count(Fs),
     N.
 
