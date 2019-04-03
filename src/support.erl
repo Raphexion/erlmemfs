@@ -12,6 +12,8 @@
 
 %% @doc root
 
+-spec root() -> dir().
+
 root() ->
     #dir{name="/", parent=none, content=#{}}.
 
@@ -20,6 +22,8 @@ root() ->
 %% we must update the parent's copy of the tree.
 %% Otherwise all changes are lost.
 %% Thus, only do it at this place in the code.
+
+-spec move_up(dir()) -> dir().
 
 move_up(Root=#dir{name="/", parent=none}) ->
     Root;
@@ -30,6 +34,8 @@ move_up(Tree=#dir{name=CWD, parent=Parent}) ->
 %% @doc move_ups
 %% Move up N times in the tree.
 
+-spec move_ups(dir(), integer()) -> dir().
+
 move_ups(CWD, 0) ->
     CWD;
 move_ups(CWD, N) ->
@@ -37,6 +43,8 @@ move_ups(CWD, N) ->
 
 %% @doc find_root
 %% Recursively move up until we hit the root
+
+-spec find_root(dir()) -> dir().
 
 find_root(Node=#dir{name="/", parent=none}) ->
     Node;
@@ -46,6 +54,9 @@ find_root(Node) ->
 %% @doc move_down
 %% Move down in the tree according to
 %% a list of folder names
+
+-spec move_down(dir(), list()) -> {'ok', dir()} |
+				  {'error', 'missing_folder'}.
 
 move_down(Tree=#dir{}, []) ->
     {ok, Tree};
@@ -61,6 +72,8 @@ move_down(CWD=#dir{content=Content}, [Head|Tail]) ->
 
 %% @doc path_to_parts
 %% Turn a path into a list of folders
+
+-spec path_to_parts(dir()) -> list(string()).
 
 path_to_parts(CWD) ->
     path_to_parts(CWD, []).
