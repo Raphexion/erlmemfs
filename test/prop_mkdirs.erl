@@ -8,8 +8,8 @@
 prop_support_root_test() ->
     ?FORALL(Folders, prop_generators:folders(),
 	    begin
-		{ok, Leaf} = support:mkdirs(support:root(), Folders),
-		Tree = support:find_root(Leaf),
+		{ok, Leaf} = erlmemfs_support:mkdirs(erlmemfs_support:root(), Folders),
+		Tree = erlmemfs_support:find_root(Leaf),
 		#{dir := N, file := 0} = stats:count(Tree),
 		N =:= length(Folders)
 	    end).
@@ -17,10 +17,10 @@ prop_support_root_test() ->
 prop_support_non_root_test() ->
     ?FORALL(Folders, prop_generators:folders(),
 	    begin
-		Root = support:root(),
+		Root = erlmemfs_support:root(),
 		Base = #dir{name="base", parent=Root},
-		{ok, Leaf} = support:mkdirs(Base, Folders),
-		Tree = support:find_root(Leaf),
+		{ok, Leaf} = erlmemfs_support:mkdirs(Base, Folders),
+		Tree = erlmemfs_support:find_root(Leaf),
 		#{dir := N, file := 0} = stats:count(Tree),
 		N =:= length(Folders) + 1
 	    end).

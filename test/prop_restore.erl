@@ -7,8 +7,8 @@
 prop_path_to_parts() ->
     ?FORALL(Parts, prop_generators:folders(),
 	    begin
-		{ok, Leaf} = support:mkdirs(support:root(), Parts),
-		Parts =:= support:path_to_parts(Leaf)
+		{ok, Leaf} = erlmemfs_support:mkdirs(erlmemfs_support:root(), Parts),
+		Parts =:= erlmemfs_support:path_to_parts(Leaf)
 	    end).
 
 %%%%%%%%%%%%%%%

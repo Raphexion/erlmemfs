@@ -1,4 +1,4 @@
--module(support).
+-module(erlmemfs_support).
 -include("erlmemfs.hrl").
 
 -export([root/0,

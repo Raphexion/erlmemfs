@@ -91,10 +91,10 @@ handle_call(current_directory, _From, CWD=#dir{name = Name}) ->
     {reply, {ok, Name}, CWD};
 
 handle_call({make_directory, Path=[$/|_]}, _From, CWD) ->
-    Restore = support:backup_dir(CWD),
-    Root = support:find_root(CWD),
+    Restore = erlmemfs_support:backup_dir(CWD),
+    Root = erlmemfs_support:find_root(CWD),
     Parts = string:tokens(Path, "/"),
-    case support:mkdirs(Root, Parts) of
+    case erlmemfs_support:mkdirs(Root, Parts) of
 	{error, Reason} ->
 	    {reply, {error, Reason}, CWD};
 	{ok, NewDir} ->
@@ -102,9 +102,9 @@ handle_call({make_directory, Path=[$/|_]}, _From, CWD) ->
     end;
 
 handle_call({make_directory, Path}, _From, CWD) ->
-    Restore = support:backup_dir(CWD),
+    Restore = erlmemfs_support:backup_dir(CWD),
     Parts = string:tokens(Path, "/"),
-    case support:mkdirs(CWD, Parts) of
+    case erlmemfs_support:mkdirs(CWD, Parts) of
 	{error, Reason} ->
 	    {reply, {error, Reason}, CWD};
 	{ok, NewDir} ->
@@ -115,18 +115,18 @@ handle_call({change_directory, "."}, _From, CWD=#dir{name=Name}) ->
     {reply, {ok, Name}, CWD};
 
 handle_call({change_directory, "/"}, _From, CWD) ->
-    {reply, {ok, "/"}, support:find_root(CWD)};
+    {reply, {ok, "/"}, erlmemfs_support:find_root(CWD)};
 
 handle_call({change_directory, ".."}, _From, CWD=#dir{parent=none}) ->
     {reply, {error, root_dir}, CWD};
 
 handle_call({change_directory, ".."}, _From,  CWD=#dir{name=Name}) ->
-    {reply, {ok, Name}, support:move_up(CWD)};
+    {reply, {ok, Name}, erlmemfs_support:move_up(CWD)};
 
 handle_call({change_directory, Abspath=[$/|_]}, _From, CWD) ->
-    Root = support:find_root(CWD),
+    Root = erlmemfs_support:find_root(CWD),
     Path = string:tokens(Abspath, "/"),
-    case support:move_down(Root, Path) of
+    case erlmemfs_support:move_down(Root, Path) of
 	{ok, Folder=#dir{name=Name}} ->
 	    {reply, {ok, Name}, Folder};
 	Error ->
@@ -223,7 +223,7 @@ handle_call({file_info, _Name}, _From, State) ->
     {reply, {error, not_implemented}, State};
 
 handle_call(count, _From, State) ->
-    {reply, {ok, stats:count(support:find_root(State))}, State};
+    {reply, {ok, stats:count(erlmemfs_support:find_root(State))}, State};
 
 handle_call(debug, _From, State) ->
     {reply, {ok, State}, State};
