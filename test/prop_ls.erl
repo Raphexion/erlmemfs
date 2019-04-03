@@ -4,7 +4,7 @@
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
-prop_test() ->
+prop_ls_test() ->
     ?FORALL(Items, items(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
@@ -46,10 +46,16 @@ unique(Items) ->
     N =:= M.
 
 item() ->
-    {oneof([file, dir]), non_empty(string())}.
+    {oneof([file, dir]), non_empty(name())}.
 
 items() ->
     ?SUCHTHAT(Items, non_empty(list(item())), unique(names(Items))).
 
 same(A, B) ->
     lists:sort(A) =:= lists:sort(B).
+
+name() ->
+    ?SUCHTHAT(Name, non_empty(string()), not invalid(Name)).
+
+invalid(Name) ->
+    lists:member($/, Name) or (Name =:= ".") or (Name =:= "..").

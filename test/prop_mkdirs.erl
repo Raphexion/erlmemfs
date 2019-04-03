@@ -5,7 +5,7 @@
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
-prop_root_test() ->
+prop_support_root_test() ->
     ?FORALL(Folders, folders(),
 	    begin
 		{ok, Leaf} = support:mkdirs(support:root(), Folders),
@@ -14,7 +14,7 @@ prop_root_test() ->
 		N =:= length(Folders)
 	    end).
 
-prop_non_root_test() ->
+prop_support_non_root_test() ->
     ?FORALL(Folders, folders(),
 	    begin
 		Root = support:root(),
@@ -23,6 +23,15 @@ prop_non_root_test() ->
 		Tree = support:find_root(Leaf),
 		#{dir := N, file := 0} = stats:count(Tree),
 		N =:= length(Folders) + 1
+	    end).
+
+prop_root_test() ->
+    ?FORALL(Folders, folders(),
+	    begin
+		{ok, Fs} = erlmemfs:start_link(),
+		Root = support:root(),
+		Path = "/" ++ string:join(Folders, "/"),
+		true
 	    end).
 
 %%%%%%%%%%%%%%%
@@ -41,4 +50,3 @@ folders() ->
 
 invalid(Folder) ->
     lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").
-

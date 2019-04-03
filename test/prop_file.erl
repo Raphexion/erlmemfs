@@ -4,7 +4,7 @@
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
-prop_test() ->
+prop_file_test() ->
     ?FORALL({Name, Content}, {file(), content()},
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
@@ -14,16 +14,18 @@ prop_test() ->
 					    fun gone/3])
 	    end).
 
-prop_nested() ->
-    ?FORALL({Folder, Name, Content}, {folder(), file(), content()},
+prop_file_nested_test() ->
+    ?FORALL({Folders, Name, Content}, {folders(), file(), content()},
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
-		make_path(Fs, Folder),
+		Path = "/" ++ string:join(Folders, "/"),
+		erlmemfs:make_directory(Fs, Path),
+		erlmemfs:change_directory(Fs, Path),
 		put_file(Fs, Name, Content)
 		    andalso get_file(Fs, Name, Content)
-		    andalso correct_count(Fs, Folder, 1)
+		    andalso correct_count(Fs, Folders, 1)
 		    andalso del_file(Fs, Name, Content)
-		    andalso correct_count(Fs, Folder, 0)
+		    andalso correct_count(Fs, Folders, 0)
 	    end).
 
 %%%%%%%%%%%%%%%
@@ -55,19 +57,25 @@ del_file(Fs, Name, _) ->
 gone(Fs, Name, _) ->
     {error, missing_file} =:= erlmemfs:get_file(Fs, Name).
 
-correct_count(Fs, Folder, NbFiles) ->
-    N = length(Folder),
+correct_count(Fs, Folders, NbFiles) ->
+    N = length(Folders),
     {ok, #{file => NbFiles, dir => N}} =:= erlmemfs:count(Fs).
 
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
 
-folder() ->
-    non_empty(list(non_empty(string()))).
-
 file() ->
     non_empty(string()).
 
 content() ->
     non_empty(binary()).
+
+folder() ->
+    ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
+
+folders() ->
+    non_empty(list(folder())).
+
+invalid(Folder) ->
+    lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").
