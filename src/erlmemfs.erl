@@ -90,14 +90,25 @@ init(_) ->
 handle_call(current_directory, _From, CWD=#dir{name = Name}) ->
     {reply, {ok, Name}, CWD};
 
-handle_call({make_directory, Name}, _From, CWD=#dir{content=C0}) ->
-    case maps:is_key(Name, C0) of
-	true ->
-	    {reply, {error, already_exists}, CWD};
-	false ->
-	    Dir = #dir{name=Name, parent=error},
-	    C1 = C0#{Name => Dir},
-	    {reply, {ok, Name}, CWD#dir{content=C1}}
+handle_call({make_directory, Path=[$/|_]}, _From, CWD) ->
+    Restore = support:backup_dir(CWD),
+    Root = support:find_root(CWD),
+    Parts = string:tokens(Path, "/"),
+    case support:mkdirs(Root, Parts) of
+	{error, Reason} ->
+	    {reply, {error, Reason}, CWD};
+	{ok, NewDir} ->
+	    {reply, {ok, Path}, Restore(NewDir)}
+    end;
+
+handle_call({make_directory, Path}, _From, CWD) ->
+    Restore = support:backup_dir(CWD),
+    Parts = string:tokens(Path, "/"),
+    case support:mkdirs(CWD, Parts) of
+	{error, Reason} ->
+	    {reply, {error, Reason}, CWD};
+	{ok, NewDir} ->
+	    {reply, {ok, Path}, Restore(NewDir)}
     end;
 
 handle_call({change_directory, "."}, _From, CWD=#dir{name=Name}) ->
