@@ -8,7 +8,9 @@ prop_test() ->
     ?FORALL(Folders, folders(),
 	    begin
 		{ok, Fs} = erlmemfs:start_link(),
-		make_folders(Fs, Folders),
+		Path = "/" ++ string:join(Folders, "/"),
+		erlmemfs:make_directory(Fs, Path),
+		erlmemfs:change_directory(Fs, Path),
 		TestablePaths = testable_paths(Folders),
 		length(TestablePaths) =:= length(Folders)
 		    andalso test_paths(Fs, TestablePaths)
@@ -17,13 +19,6 @@ prop_test() ->
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
-make_folders(Fs, []) ->
-    erlmemfs:change_directory(Fs, "/"),
-    ok;
-make_folders(Fs, [Folder|Rest]) ->
-    erlmemfs:make_directory(Fs, Folder),
-    erlmemfs:change_directory(Fs, Folder),
-    make_folders(Fs, Rest).
 
 testable_paths(Folders) ->
     testable_paths(Folders, "", []).
