@@ -65,7 +65,7 @@ path_to_parts(CWD) ->
     path_to_parts(CWD, []).
 
 path_to_parts(#dir{name="/", parent=none}, Folders) ->
-    lists:reverse(Folders);
+    Folders;
 path_to_parts(CWD=#dir{name=Name}, Folders) ->
     path_to_parts(move_up(CWD), [Name|Folders]).
 
