@@ -73,13 +73,15 @@ path_to_parts(CWD=#dir{name=Name}, Folders) ->
 %% @doc path_to_parts
 %% Turn a path into a list of folders
 
+-spec mkdirs(dir(), list(string())) -> {'ok', dir()} | {'error', 'already_exists'}.
+
 mkdirs(CWD, []) ->
-    CWD;
+    {ok, CWD};
 mkdirs(CWD0=#dir{content=Content}, [Name|Tail]) ->
-    case maps:is_key(Name, Content) of
-	true ->
-	    {error, already_exists};
-	false ->
+    case maps:get(Name, Content, badkey) of
+	#file{} ->
+	    {error, file_collision};
+	_ ->
 	    Dir = #dir{name=Name},
 	    CWD1 = CWD0#dir{content=Content#{Name=>Dir}},
 	    {ok, Next} = move_down(CWD1, [Name]),

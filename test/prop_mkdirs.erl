@@ -8,7 +8,7 @@
 prop_root_test() ->
     ?FORALL(Folders, folders(),
 	    begin
-		Leaf = support:mkdirs(support:root(), Folders),
+		{ok, Leaf} = support:mkdirs(support:root(), Folders),
 		Tree = support:find_root(Leaf),
 		#{dir := N, file := 0} = stats:count(Tree),
 		N =:= length(Folders)
@@ -19,7 +19,7 @@ prop_non_root_test() ->
 	    begin
 		Root = support:root(),
 		Base = #dir{name="base", parent=Root},
-		Leaf = support:mkdirs(Base, Folders),
+		{ok, Leaf} = support:mkdirs(Base, Folders),
 		Tree = support:find_root(Leaf),
 		#{dir := N, file := 0} = stats:count(Tree),
 		N =:= length(Folders) + 1
