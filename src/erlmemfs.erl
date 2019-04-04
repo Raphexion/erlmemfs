@@ -296,4 +296,3 @@ node_name(#file{name=Name}) ->
     {file, Name};
 node_name(#dir{name=Name}) ->
     {dir, Name}.
-
