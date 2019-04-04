@@ -9,3 +9,11 @@ with Bifrost.
 Use property testing to test functionality.
 
 [Property based testing](https://pragprog.com/book/fhproper/property-based-testing-with-proper-erlang-and-elixir)
+
+Getting Started
+---------------
+
+```sh
+rebar3 proper --cover
+rebar3 cover
+```
