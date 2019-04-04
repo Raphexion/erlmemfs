@@ -26,8 +26,6 @@ start_link(Data) ->
 open(Pid) ->
     gen_server:call(Pid, open).
 
-read_block(Pid, Ref, 0) ->
-    {ok, <<>>};  %% someone is trying to read 0 bytes
 read_block(Pid, Ref, NbBytes) ->
     gen_server:call(Pid, {read, Ref, NbBytes}).
 
@@ -54,7 +52,7 @@ handle_call({read, Ref, NbBytes}, _From, State=#state{data=Data, refs=Refs}) ->
 	eof ->
 	    {reply, {ok, eof}, State};
 	{ok, Bytes, RefState} ->
-	    {reply, {ok, Bytes}, State#state{refs=Refs#{ref => RefState}}}
+	    {reply, {ok, Bytes}, State#state{refs=Refs#{Ref => RefState}}}
     end;
 
 handle_call(What, _From, State) ->
