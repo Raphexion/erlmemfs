@@ -7,6 +7,7 @@
 prop_file_test() ->
     ?FORALL({Name, Content}, name_and_content(),
 	    begin
+		application:ensure_all_started(erlmemfs),
 		{ok, Fs} = erlmemfs:start_link(),
 		combine(Fs, Name, Content, [fun put_file/3,
 					    fun get_file/3,
@@ -17,6 +18,7 @@ prop_file_test() ->
 prop_file_nested_test() ->
     ?FORALL({Folders, Name, Content}, folders_file_and_content(),
 	    begin
+		application:ensure_all_started(erlmemfs),
 		{ok, Fs} = erlmemfs:start_link(),
 		Path = "/" ++ string:join(Folders, "/"),
 		erlmemfs:make_directory(Fs, Path),
