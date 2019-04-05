@@ -30,7 +30,8 @@ init([]) ->
                  period => 1},
 
     ErlMemFsFile = #{id => erlmemfs_file,
-		 start => {erlmemfs_file, start_link, []}},
+		     start => {erlmemfs_file, start_link, []},
+		     restart => transient},
 
     Children = [ErlMemFsFile],
 

@@ -154,7 +154,8 @@ handle_call(tree, _From, CWD) ->
 handle_call({put_file, Name, Data}, _From, CWD=#dir{content=Content}) ->
     case maps:get(Name, Content, badkey) of
 	badkey ->
-	    File = #file{name=Name, content=Data},
+	    {ok, Fp} = erlmemfs_file_sup:create_erlmemfs_file(Data),
+	    File = #file{name=Name, fp=Fp},
 	    {reply, {ok, Name}, CWD#dir{content=Content#{Name => File}}};
 	#file{} ->
 	    {reply, {error, file_collision}, CWD};
@@ -168,8 +169,8 @@ handle_call({get_file, Name}, _From, CWD=#dir{content=Content}) ->
 	    {reply, {error, missing_file}, CWD};
 	#dir{} ->
 	    {reply, {error, target_is_dir}, CWD};
-	#file{content=Data} ->
-	    {reply, {ok, Data}, CWD}
+	#file{fp=Fp} ->
+	    {reply, {ok, Fp}, CWD}
     end;
 
 handle_call({remove_file, Name}, _From, CWD=#dir{content=Content}) ->
@@ -178,7 +179,8 @@ handle_call({remove_file, Name}, _From, CWD=#dir{content=Content}) ->
 	    {reply, {error, not_found}, CWD};
 	#dir{} ->
 	    {reply, {error, not_directory}, CWD};
-	#file{} ->
+	#file{fp=Fp} ->
+	    erlmemfs_file:stop(Fp),
 	    {reply, {ok, Name}, CWD#dir{content=maps:remove(Name, Content)}}
     end;
 
@@ -259,14 +261,14 @@ priv_tree(#dir{name = Name, content = Tree}, N) ->
     priv_print_dir(Name, N),
     [priv_tree(Node, N+1) || Node <- maps:values(Tree)];
 
-priv_tree(#file{name = Name, content = Content}, N) ->
-    priv_print_file(Name, Content, N).
+priv_tree(#file{name = Name, fp=Fp}, N) ->
+    priv_print_file(Name, Fp, N).
 
 priv_print_dir(Name, N) ->
     Gap = ["  " || _ <- lists:seq(1, N)],
     io:fwrite("~s|---~s~n", [Gap, Name]).
 
-priv_print_file(Name, _Content, N) ->
+priv_print_file(Name, _Fp, N) ->
     Gap = [" " || _ <- lists:seq(1, N+1)],
     io:fwrite("~s|---~s~n", [Gap, Name]).
 

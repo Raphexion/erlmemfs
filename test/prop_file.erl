@@ -42,7 +42,8 @@ put_file(Fs, Name, Content) ->
     {ok, Name} =:= erlmemfs:put_file(Fs, Name, Content).
 
 get_file(Fs, Name, Content) ->
-    {ok, Content} =:= erlmemfs:get_file(Fs, Name).
+    {ok, Fp} = erlmemfs:get_file(Fs, Name),
+    Content =:= content(Fp).
 
 del_file(Fs, Name, _) ->
     {ok, Name} =:= erlmemfs:remove_file(Fs, Name).
@@ -54,15 +55,21 @@ correct_count(Fs, Folders, NbFiles) ->
     N = length(Folders),
     {ok, #{file => NbFiles, dir => N}} =:= erlmemfs:count(Fs).
 
+content(Fp) ->
+    {ok, Fd} = erlmemfs_file:open(Fp),
+    {ok, Content} = erlmemfs_file:read_block(Fp, Fd, 4096),
+    {ok, eof} = erlmemfs_file:read_block(Fp, Fd, 4096),
+    Content.
+
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
 
 name_and_content() ->
-    {prop_generators:file(), 
+    {prop_generators:file(),
      prop_generators:content()}.
 
 folders_file_and_content() ->
-    {prop_generators:folders(), 
-     prop_generators:file(), 
+    {prop_generators:folders(),
+     prop_generators:file(),
      prop_generators:content()}.

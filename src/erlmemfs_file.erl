@@ -4,6 +4,7 @@
 %% API
 
 -export([start_link/1,
+	 stop/1,
 	 open/1,
 	 read_block/3]).
 
@@ -22,6 +23,9 @@
 
 start_link(Data) ->
     gen_server:start_link(?MODULE, Data, []).
+
+stop(Pid) ->
+    gen_server:stop(Pid, normal, 5000).
 
 open(Pid) ->
     gen_server:call(Pid, open).
