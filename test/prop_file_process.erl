@@ -7,39 +7,45 @@
 prop_basic_read() ->
     ?FORALL(Data, prop_generators:content(),
 	    begin
-		{ok, F} = erlmemfs_file:start_link(Data),
+		erlmemfs_file_sup:start_link(),
+		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(Data),
 		{ok, Ref} = erlmemfs_file:open(F),
-		{ok, Data} =:= erlmemfs_file:read_block(F, Ref, byte_size(Data)) andalso
-		    {ok, eof} =:= erlmemfs_file:read_block(F, Ref, 1)
+		{ok, Data} =:= read_block(F, Ref, byte_size(Data)) andalso
+		    {ok, eof} =:= read_block(F, Ref, 1)
 	    end).
 
 prop_twice_read() ->
     ?FORALL(BaseData, non_empty(prop_generators:content()),
 	    begin
 		Data = double_data(BaseData),
-		{ok, F} = erlmemfs_file:start_link(Data),
+		erlmemfs_file_sup:start_link(),
+		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(Data),
 		{ok, Ref} = erlmemfs_file:open(F),
 		Size = byte_size(BaseData),
-		{ok, BaseData} =:= erlmemfs_file:read_block(F, Ref, Size) andalso
-		    {ok, BaseData} =:= erlmemfs_file:read_block(F, Ref, Size) andalso
-		    {ok, eof} =:= erlmemfs_file:read_block(F, Ref, 1)
+		{ok, BaseData} =:= read_block(F, Ref, Size) andalso
+		    {ok, BaseData} =:= read_block(F, Ref, Size) andalso
+		    {ok, eof} =:= read_block(F, Ref, 1)
 	    end).
 
 prop_reverse_twice_read() ->
     ?FORALL(DataOrg, non_empty(prop_generators:content()),
 	    begin
 		DataRev = reverse_data(DataOrg),
-		{ok, F} = erlmemfs_file:start_link(<<DataOrg/binary, DataRev/binary>>),
+		erlmemfs_file_sup:start_link(),
+		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(<<DataOrg/binary, DataRev/binary>>),
 		{ok, Ref} = erlmemfs_file:open(F),
 		Size = byte_size(DataOrg),
-		{ok, DataOrg} =:= erlmemfs_file:read_block(F, Ref, Size) andalso
-		    {ok, DataRev} =:= erlmemfs_file:read_block(F, Ref, Size) andalso
-		    {ok, eof} =:= erlmemfs_file:read_block(F, Ref, 1)
+		{ok, DataOrg} =:= read_block(F, Ref, Size) andalso
+		    {ok, DataRev} =:= read_block(F, Ref, Size) andalso
+		    {ok, eof} =:= read_block(F, Ref, 1)
 	    end).
 
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
+
+read_block(F, Ref, Size) ->
+    erlmemfs_file:read_block(F, Ref, Size).
 
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%

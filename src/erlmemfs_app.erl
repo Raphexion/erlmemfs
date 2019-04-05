@@ -15,7 +15,8 @@
 %%====================================================================
 
 start(_StartType, _StartArgs) ->
-    erlmemfs_sup:start_link().
+    erlmemfs_sup:start_link(),
+    erlmemfs_file_sup:start_link().
 
 %%--------------------------------------------------------------------
 stop(_State) ->
