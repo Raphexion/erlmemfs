@@ -11,7 +11,8 @@ prop_basic_read() ->
 		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(Data),
 		{ok, Ref} = erlmemfs_file:open(F),
 		{ok, Data} =:= read_block(F, Ref, byte_size(Data)) andalso
-		    {ok, eof} =:= read_block(F, Ref, 1)
+		    {ok, eof} =:= read_block(F, Ref, 1) andalso
+		    {ok, closed} =:= erlmemfs_file:close(F, Ref)
 	    end).
 
 prop_twice_read() ->

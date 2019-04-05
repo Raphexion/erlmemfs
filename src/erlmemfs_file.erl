@@ -6,6 +6,7 @@
 -export([start_link/1,
 	 stop/1,
 	 open/1,
+	 close/2,
 	 read_block/3]).
 
 %% Behaviour callbacks
@@ -30,6 +31,9 @@ stop(Pid) ->
 open(Pid) ->
     gen_server:call(Pid, open).
 
+close(Pid, Ref) ->
+    gen_server:call(Pid, {close, Ref}).
+
 read_block(Pid, Ref, NbBytes) ->
     gen_server:call(Pid, {read, Ref, NbBytes}).
 
@@ -48,6 +52,16 @@ init(Data) ->
 handle_call(open, _From, State=#state{refs=Refs}) ->
     Ref = make_ref(),
     {reply, {ok, Ref}, State#state{refs=Refs#{Ref => 0}}};
+
+handle_call({close, Ref}, _From, State=#state{refs=Refs}) ->
+    case maps:get(Ref, Refs, badkey) of
+	badkey ->
+	    {reply, {error, missing}, State};
+	closed ->
+	    {reply, {error, alread_closed}, State};
+	_Size ->
+	    {reply, {ok, closed}, State#state{refs=Refs#{Ref => closed}}}
+    end;
 
 handle_call({read, Ref, NbBytes}, _From, State=#state{data=Data, refs=Refs}) ->
     case priv_read(Data, NbBytes, maps:get(Ref, Refs, badkey)) of
