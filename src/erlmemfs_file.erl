@@ -9,6 +9,7 @@
 	 close/2,
 	 write_block/3,
 	 read_block/3]).
+-export([debug/2]).
 
 %% Behaviour callbacks
 
@@ -41,6 +42,9 @@ write_block(Pid, Ref, Fun) ->
 read_block(Pid, Ref, NbBytes) ->
     gen_server:call(Pid, {read, Ref, NbBytes}).
 
+debug(Pid, DebugString) ->
+    gen_server:call(Pid, {debug, DebugString}).
+
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
@@ -54,12 +58,9 @@ read_block(Pid, Ref, NbBytes) ->
 init(Data) ->
     {ok, #state{data=Data}}.
 
-handle_call(_What, _From, State=#state{locked=true}) ->
-    {reply, {error, locked}, State};
-
-handle_call(open, _From, State=#state{refs=Refs}) ->
-    Ref = make_ref(),
-    {reply, {ok, Ref}, State#state{refs=Refs#{Ref => 0}}};
+handle_call({debug, DebugString}, _From, State=#state{data=Data}) ->
+    io:fwrite(DebugString, [State]),
+    {reply, ok, State};
 
 handle_call({close, Ref}, _From, State=#state{refs=Refs}) ->
     case maps:get(Ref, Refs, badkey) of
@@ -71,9 +72,22 @@ handle_call({close, Ref}, _From, State=#state{refs=Refs}) ->
 	    {reply, {ok, closed}, State#state{refs=Refs#{Ref => closed}}}
     end;
 
+handle_call(_What, _From, State=#state{locked=true}) ->
+    %% Please not that both debug and close must be matched
+    %% before this (locked). Otherwise we can neither
+    %% debug or close our files
+    {reply, {error, locked}, State};
+
+handle_call(open, _From, State=#state{refs=Refs}) ->
+    Ref = make_ref(),
+    {reply, {ok, Ref}, State#state{refs=Refs#{Ref => 0}}};
+
 handle_call({write_block, _Ref, Fun}, From, State=#state{refs=Refs}) ->
-    case maps:filter(fun(_, V) -> V /= closed end, Refs) of
-	[] ->
+    Values = maps:values(Refs),
+    Filter = fun(V) -> V /= closed end,
+    Status = lists:filter(Filter, Values),
+    case Status of
+	[0] ->
 	    erlang:send_after(0, self(), {write, Fun, From}),
 	    Empty = <<>>,
 	    {noreply, State#state{locked=true, data=Empty}};
@@ -114,7 +128,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%------------------------------------------------------------------------------
 
 priv_write_blocks(Fun, From, State) ->
-    case Fun() of
+    case Fun(1024) of
         {ok, Bytes, _ReadCount} ->
 	    erlang:send_after(0, self(), {write, Fun, From}),
 	    #state{data=Data} = State,
@@ -122,7 +136,7 @@ priv_write_blocks(Fun, From, State) ->
 	    State#state{data=NewData};
         done ->
 	    gen_server:reply(From, done),
-	    State
+	    State#state{locked=false}
     end.
 
 priv_read(_Data, _NbBytes, badkey) ->
