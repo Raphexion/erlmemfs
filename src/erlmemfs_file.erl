@@ -136,7 +136,7 @@ priv_write_blocks(Fun, From, State) ->
         {ok, Bytes, _ReadCount} ->
 	    erlang:send_after(0, self(), {write, Fun, From}),
 	    #state{data=Data} = State,
-	    NewData = <<Data/binary, Bytes/binary>>,
+	    NewData = erlang:iolist_to_binary([Data, Bytes]),
 	    State#state{data=NewData};
         done ->
 	    gen_server:reply(From, done),
