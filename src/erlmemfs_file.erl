@@ -8,6 +8,7 @@
 	 open/1,
 	 close/2,
 	 write_block/3,
+	 write_block/4,
 	 read_block/3]).
 -export([debug/2]).
 
@@ -37,7 +38,10 @@ close(Pid, Ref) ->
     gen_server:call(Pid, {close, Ref}).
 
 write_block(Pid, Ref, Fun) ->
-    gen_server:call(Pid, {write_block, Ref, Fun}).
+    write_block(Pid, Ref, Fun, 5000).
+
+write_block(Pid, Ref, Fun, Timeout) ->
+    gen_server:call(Pid, {write_block, Ref, Fun}, Timeout).
 
 read_block(Pid, Ref, NbBytes) ->
     gen_server:call(Pid, {read, Ref, NbBytes}).
@@ -58,7 +62,7 @@ debug(Pid, DebugString) ->
 init(Data) ->
     {ok, #state{data=Data}}.
 
-handle_call({debug, DebugString}, _From, State=#state{data=Data}) ->
+handle_call({debug, DebugString}, _From, State) ->
     io:fwrite(DebugString, [State]),
     {reply, ok, State};
 
