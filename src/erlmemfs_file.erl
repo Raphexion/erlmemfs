@@ -9,7 +9,8 @@
 	 close/2,
 	 write_block/3,
 	 write_block/4,
-	 read_block/3]).
+	 read_block/3,
+	 read/1]).
 -export([debug/2]).
 
 %% Behaviour callbacks
@@ -45,6 +46,9 @@ write_block(Pid, Ref, Fun, Timeout) ->
 
 read_block(Pid, Ref, NbBytes) ->
     gen_server:call(Pid, {read, Ref, NbBytes}).
+
+read(Pid) ->
+    gen_server:call(Pid, read).
 
 debug(Pid, DebugString) ->
     gen_server:call(Pid, {debug, DebugString}).
@@ -98,6 +102,9 @@ handle_call({write_block, _Ref, Fun}, From, State=#state{refs=Refs}) ->
 	_ ->
 	    {reply, {error, busy}, State}
     end;
+
+handle_call(read, _From, State=#state{data=Data}) ->
+    {reply, {ok, Data}, State};
 
 handle_call({read, Ref, NbBytes}, _From, State=#state{data=Data, refs=Refs}) ->
     case priv_read(Data, NbBytes, maps:get(Ref, Refs, badkey)) of
