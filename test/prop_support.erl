@@ -23,6 +23,27 @@ prop_move_ups_past_test() ->
 		Name =:= "/" andalso Parent =:= none
 	    end).
 
+prop_move_down_test() ->
+    ?FORALL(Folders, prop_generators:folders(),
+	    begin
+		{ok, Leaf1} = erlmemfs_support:mkdirs(erlmemfs_support:root(), Folders),
+		Base = erlmemfs_support:move_ups(Leaf1, length(Folders)),
+		{ok, Leaf2} = erlmemfs_support:move_down(Base, Folders),
+		#dir{name=Name1} = Leaf1,
+		#dir{name=Name2} = Leaf2,
+		Name = lists:last(Folders),
+		Name1 =:= Name andalso Name2 =:= Name
+	    end).
+
+prop_move_down_errors_test() ->
+    ?FORALL({Folders, Folder}, {prop_generators:folders(), prop_generators:folder()},
+	    begin
+		{ok, Leaf1} = erlmemfs_support:mkdirs(erlmemfs_support:root(), Folders),
+		Base = erlmemfs_support:move_ups(Leaf1, length(Folders)),
+		{ok, Leaf2} = erlmemfs_support:move_down(Base, Folders),
+		{error, missing_folder} =:= erlmemfs_support:move_down(Leaf2, Folder)
+	    end).
+
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
