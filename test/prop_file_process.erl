@@ -31,7 +31,18 @@ prop_bad_read() ->
 		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(Data),
 		{ok, _Ref} = erlmemfs_file:open(F),
 		Ref = nonsense_reference,
-		{error, bad_reference} =:= read_block(F, Ref, byte_size(Data))
+		{error, bad_reference} =:= erlmemfs_file:read_block(F, Ref, byte_size(Data))
+	    end).
+
+prop_bad_write() ->
+    ?FORALL(Data, non_empty(prop_generators:content()),
+	    begin
+		erlmemfs_file_sup:start_link(),
+		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(Data),
+		{ok, _Ref} = erlmemfs_file:open(F),
+		Ref = nonsense_reference,
+		Fun = fun(_) -> prop_test_failed end,
+		{error, bad_reference} =:= erlmemfs_file:write_block(F, Ref, Fun)
 	    end).
 
 prop_twice_read() ->
