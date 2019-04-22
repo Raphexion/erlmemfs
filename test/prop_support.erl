@@ -44,6 +44,17 @@ prop_move_down_errors_test() ->
 		{error, missing_folder} =:= erlmemfs_support:move_down(Leaf2, Folder)
 	    end).
 
+prop_collision_test() ->
+    ?FORALL(Name, prop_generators:folder(),
+	    begin
+		{ok, Fs} = erlmemfs:start_link(),
+		{ok, Name} = erlmemfs:put_file(Fs, Name, <<>>),
+		{error, file_collision} =:= erlmemfs:make_directory(Fs, Name)
+		    andalso
+		    {error, target_is_file} =:= erlmemfs:change_directory(Fs, Name)
+	    end).
+
+
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
