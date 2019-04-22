@@ -47,6 +47,7 @@ prop_move_down_errors_test() ->
 prop_collision_test() ->
     ?FORALL(Name, prop_generators:folder(),
 	    begin
+		application:ensure_all_started(erlmemfs),
 		{ok, Fs} = erlmemfs:start_link(),
 		{ok, Name} = erlmemfs:put_file(Fs, Name, <<>>),
 		{error, file_collision} =:= erlmemfs:make_directory(Fs, Name)
