@@ -24,6 +24,16 @@ prop_basic_read() ->
 		    {error, alread_closed} =:= erlmemfs_file:close(F, Ref)
 	    end).
 
+prop_bad_read() ->
+    ?FORALL(Data, non_empty(prop_generators:content()),
+	    begin
+		erlmemfs_file_sup:start_link(),
+		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(Data),
+		{ok, _Ref} = erlmemfs_file:open(F),
+		Ref = nonsense_reference,
+		{error, bad_reference} =:= read_block(F, Ref, byte_size(Data))
+	    end).
+
 prop_twice_read() ->
     ?FORALL(BaseData, non_empty(prop_generators:content()),
 	    begin
