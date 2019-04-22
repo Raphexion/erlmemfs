@@ -5,7 +5,7 @@
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
 prop_basic_write() ->
-    ?FORALL(Data, prop_generators:content(),
+    ?FORALL(Data, non_empty(prop_generators:content()),
 	    begin
 		application:ensure_all_started(erlmemfs),
 		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(<<>>),

@@ -10,7 +10,7 @@ file() ->
     non_empty(string()).
 
 content() ->
-    non_empty(binary()).
+    binary().
 
 folder() ->
     ?SUCHTHAT(Folder, non_empty(string()), not invalid(Folder)).
@@ -20,4 +20,3 @@ folders() ->
 
 invalid(Folder) ->
     lists:member($/, Folder) or (Folder =:= ".") or (Folder =:= "..").
-

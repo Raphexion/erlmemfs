@@ -69,9 +69,9 @@ content(Fp) ->
 
 name_and_content() ->
     {prop_generators:file(),
-     prop_generators:content()}.
+     non_empty(prop_generators:content())}.
 
 folders_file_and_content() ->
     {prop_generators:folders(),
      prop_generators:file(),
-     prop_generators:content()}.
+     non_empty(prop_generators:content())}.
