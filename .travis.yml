@@ -13,6 +13,7 @@ script:
   - rebar3 eunit --cover
   - rebar3 proper --cover
   - rebar3 cover
+  - rebar3 codecov analyze
 
 after_success:
     codecov
