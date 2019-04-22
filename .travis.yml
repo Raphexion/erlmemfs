@@ -5,7 +5,14 @@ otp_release:
   - 20.2
   - 19.3
 
+install:
+    pip install --user --disable-pip-version-check codecov
+
 script:
   - rebar3 compile
-  - rebar3 eunit
+  - rebar3 eunit --cover
   - rebar3 proper --cover
+  - rebar3 cover
+
+after_success:
+    codecov
