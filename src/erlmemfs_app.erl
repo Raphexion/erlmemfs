@@ -4,7 +4,7 @@
 %%%-------------------------------------------------------------------
 
 -module(erlmemfs_app).
-
+-include_lib("eunit/include/eunit.hrl").
 -behaviour(application).
 
 %% Application callbacks
@@ -20,8 +20,14 @@ start(_StartType, _StartArgs) ->
 
 %%--------------------------------------------------------------------
 stop(_State) ->
+    gen_server:stop(erlmemfs_sup),
+    gen_server:stop(erlmemfs_file_sup),
     ok.
 
 %%====================================================================
-%% Internal functions
+%% Tests
 %%====================================================================
+
+start_stop_test() ->
+    start(ok, ok),
+    ok =:= stop(ok).
