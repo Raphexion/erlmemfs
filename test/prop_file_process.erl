@@ -4,6 +4,14 @@
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
+prop_basic_file() ->
+    ?FORALL(Data, prop_generators:content(),
+	    begin
+		erlmemfs_file_sup:start_link(),
+		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(Data),
+		{ok, Data} =:= erlmemfs_file:read(F)
+	    end).
+
 prop_basic_read() ->
     ?FORALL(Data, non_empty(prop_generators:content()),
 	    begin
