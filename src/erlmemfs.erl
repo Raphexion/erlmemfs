@@ -123,8 +123,9 @@ handle_call({change_directory, "/"}, _From, CWD) ->
 handle_call({change_directory, ".."}, _From, CWD=#dir{parent=none}) ->
     {reply, {error, root_dir}, CWD};
 
-handle_call({change_directory, ".."}, _From,  CWD=#dir{name=Name}) ->
-    {reply, {ok, Name}, erlmemfs_support:move_up(CWD)};
+handle_call({change_directory, ".."}, _From,  CWD) ->
+    Parent=#dir{name=Name}=erlmemfs_support:move_up(CWD),
+    {reply, {ok, Name}, Parent};
 
 handle_call({change_directory, Abspath=[$/|_]}, _From, CWD) ->
     Root = erlmemfs_support:find_root(CWD),

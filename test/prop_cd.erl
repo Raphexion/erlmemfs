@@ -16,6 +16,22 @@ prop_test() ->
 		    andalso test_paths(Fs, TestablePaths)
         end).
 
+prop_dotdot_test() ->
+    ?FORALL(Name, prop_generators:folder(),
+	    begin
+		{ok, Fs} = erlmemfs:start_link(),
+		erlmemfs:make_directory(Fs, Name),
+		{ok, "/"} =:= erlmemfs:current_directory(Fs)
+		    andalso
+		    {error, root_dir} =:= erlmemfs:change_directory(Fs, "..")
+		    andalso
+		    {ok, Name} =:= erlmemfs:change_directory(Fs, Name)
+		    andalso
+		    {ok, Name} =:= erlmemfs:current_directory(Fs)
+		    andalso
+		    {ok, "/"} =:= erlmemfs:change_directory(Fs, "..")
+	    end).
+
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
