@@ -66,6 +66,9 @@ get_file(Fs, Name) ->
 file_info(Fs, Name) ->
     gen_server:call(Fs, {file_info, Name}).
 
+rename_file(Fs, Name, Name) ->
+    {ok, Name};
+
 rename_file(Fs, From, To) ->
     gen_server:call(Fs, {rename_file, From, To}).
 
