@@ -20,7 +20,8 @@ prop_basic_read() ->
 		{ok, Ref} = erlmemfs_file:open(F),
 		{ok, Data} =:= read_block(F, Ref, byte_size(Data)) andalso
 		    {ok, eof} =:= read_block(F, Ref, 1) andalso
-		    {ok, closed} =:= erlmemfs_file:close(F, Ref)
+		    {ok, closed} =:= erlmemfs_file:close(F, Ref) andalso
+		    {error, alread_closed} =:= erlmemfs_file:close(F, Ref)
 	    end).
 
 prop_twice_read() ->
