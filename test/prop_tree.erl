@@ -1,33 +1,35 @@
 -module(prop_tree).
 -include_lib("proper/include/proper.hrl").
--import(prop_generators, [folder/0,
-			  folders/0,
-			  files/0]).
+-import(prop_generators, [unique_files_and_folders/0]).
 
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
-prop_minimal_tree_test() ->
-    ?FORALL(Folder, folder(),
+prop_non_nested_tree_test() ->
+    ?FORALL({Files, Folders}, unique_files_and_folders(),
 	    begin
 		application:ensure_all_started(erlmemfs),
 		{ok, Fs} = erlmemfs_sup:create_erlmemfs(),
-		{ok, Folder} = erlmemfs:make_directory(Fs, Folder),
+
+		create_folders(Fs, Folders),
+		create_files(Fs, Files),
 
 		Counter = start_counter(self()),
 		Binder = binder(Counter),
 		erlmemfs:tree(Fs, Binder),
 
 		Counter ! total,
-		{Dirs, Files} = receive
-				    Res ->
-					Res
-				after 100 ->
-					{-1, -1}
-				end,
+		{NbFolders, NbFiles} =
+		    receive
+			Res ->
+			    Res
+		    after 100 ->
+			    {-1, -1}
+		    end,
 
-		%% 2 because Root dir + Folder
-		Dirs =:= 2 andalso Files =:= 0
+		%% +1 because of root folder /
+		NbFolders =:= (length(Folders) + 1)
+		    andalso NbFiles =:= length(Files)
 	    end).
 
 %%%%%%%%%%%%%%%
@@ -52,6 +54,18 @@ binder(Counter) ->
         (file, _, _) ->
 	    Counter ! file
     end.
+
+create_folders(_Fs, []) ->
+    ok;
+create_folders(Fs, [Folder|Folders]) ->
+    erlmemfs:make_directory(Fs, Folder),
+    create_folders(Fs, Folders).
+
+create_files(_Fs, []) ->
+    ok;
+create_files(Fs, [File|Files]) ->
+    erlmemfs:put_file(Fs, File, <<>>),
+    create_files(Fs, Files).
 
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%
