@@ -90,18 +90,14 @@ handle_call(open, _From, State=#state{refs=Refs}) ->
     Ref = make_ref(),
     {reply, {ok, Ref}, State#state{refs=Refs#{Ref => 0}}};
 
-handle_call({write_block, _Ref, Fun}, From, State=#state{refs=Refs}) ->
+handle_call({write_block, Ref, Fun}, From, State=#state{refs=Refs}) ->
+    WriteRefStatus = maps:get(Ref, Refs, badkey),
+
     Values = maps:values(Refs),
     Filter = fun(V) -> V /= closed end,
-    Status = lists:filter(Filter, Values),
-    case Status of
-	[0] ->
-	    erlang:send_after(0, self(), {write, Fun, From}),
-	    Empty = <<>>,
-	    {noreply, State#state{locked=true, data=Empty}};
-	_ ->
-	    {reply, {error, busy}, State}
-    end;
+    AllRefStatus = lists:filter(Filter, Values),
+
+    write_logic(State, Fun, From, WriteRefStatus, AllRefStatus);
 
 handle_call(read, _From, State=#state{data=Data}) ->
     {reply, {ok, Data}, State};
@@ -166,3 +162,14 @@ priv_read(Data, NbBytes, AlreadyRead) ->
 	    Block = binary:part(Data, AlreadyRead, Rem),
 	    {ok, Block, byte_size(Data)}
     end.
+
+write_logic(State, _Fun, _From, badkey, _AllRefStatus) ->
+    {reply, {error, bad_reference}, State};
+
+write_logic(State, Fun, From, Ref, [Ref]) ->
+    erlang:send_after(0, self(), {write, Fun, From}),
+    Empty = <<>>,
+    {noreply, State#state{locked=true, data=Empty}};
+
+write_logic(State, _Fun, _From, _, _) ->
+    {reply, {error, busy}, State}.
