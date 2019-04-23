@@ -2,12 +2,16 @@
 -include_lib("proper/include/proper.hrl").
 
 -export([file/0,
+	 files/0,
 	 content/0,
 	 folder/0,
 	 folders/0]).
 
 file() ->
     non_empty(string()).
+
+files() ->
+    non_empty(list(file())).
 
 content() ->
     binary().
