@@ -16,7 +16,8 @@
          get_file/2,
          file_info/2,
          rename_file/3,
-	 tree/1]).
+	 tree/1,
+	 tree/2]).
 -export([count/1]).
 -export([debug/1]).
 
@@ -72,8 +73,18 @@ rename_file(_Fs, Name, Name) ->
 rename_file(Fs, From, To) ->
     gen_server:call(Fs, {rename_file, From, To}).
 
+tree_printer(dir, Name, N) ->
+    Gap = ["  " || _ <- lists:seq(1, N)],
+    io:fwrite("~s|---~s~n", [Gap, Name]);
+tree_printer(file, Name, N) ->
+    Gap = [" " || _ <- lists:seq(1, N+1)],
+    io:fwrite("~s|---~s~n", [Gap, Name]).
+
 tree(Fs) ->
-    gen_server:call(Fs, tree).
+    tree(Fs, fun tree_printer/3).
+
+tree(Fs, Fun) ->
+    gen_server:call(Fs, {tree, Fun}).
 
 count(Fs) ->
     gen_server:call(Fs, count).
@@ -151,8 +162,8 @@ handle_call({change_directory, Name}, _From, CWD=#dir{content=Content}) ->
 	    {reply, {ok, Name}, Target#dir{parent=CWD}}
     end;
 
-handle_call(tree, _From, CWD) ->
-    priv_tree(CWD),
+handle_call({tree, Fun}, _From, CWD) ->
+    priv_tree(CWD, Fun),
     {reply, ok, CWD};
 
 handle_call({put_file, Name, Data}, _From, CWD=#dir{content=Content}) ->
@@ -258,23 +269,21 @@ code_change(_OldVsn, State, _Extra) ->
 %% Private
 %%------------------------------------------------------------------------------
 
-priv_tree(Tree) ->
-    priv_tree(Tree, 0).
+priv_tree(Tree, Fun) ->
+    priv_tree(Tree, Fun, 0).
 
-priv_tree(#dir{name = Name, content = Tree}, N) ->
-    priv_print_dir(Name, N),
-    [priv_tree(Node, N+1) || Node <- maps:values(Tree)];
+priv_tree(#dir{name = Name, content = Tree}, Fun, N) ->
+    priv_print_dir(Fun, Name, N),
+    [priv_tree(Node, Fun, N+1) || Node <- maps:values(Tree)];
 
-priv_tree(#file{name = Name, fp=Fp}, N) ->
-    priv_print_file(Name, Fp, N).
+priv_tree(#file{name = Name, fp=Fp}, Fun, N) ->
+    priv_print_file(Fun, Name, Fp, N).
 
-priv_print_dir(Name, N) ->
-    Gap = ["  " || _ <- lists:seq(1, N)],
-    io:fwrite("~s|---~s~n", [Gap, Name]).
+priv_print_dir(Fun, Name, N) ->
+    Fun(dir, Name, N).
 
-priv_print_file(Name, _Fp, N) ->
-    Gap = [" " || _ <- lists:seq(1, N+1)],
-    io:fwrite("~s|---~s~n", [Gap, Name]).
+priv_print_file(Fun, Name, _Fp, N) ->
+    Fun(file, Name, N).
 
 priv_rename_file(Content, _From, _To, badkey, _ToStatus) ->
     {error, file_missing, Content};
