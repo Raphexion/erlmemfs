@@ -1,5 +1,7 @@
+%% -*- mode: erlang -*-
+
 {application, erlmemfs,
- [{description, "An OTP application"},
+ [{description, "A simple in-memory filesystem inspirered and intended to be used with Bifrost."},
   {vsn, "0.1.0"},
   {registered, []},
   {mod, { erlmemfs_app, []}},
