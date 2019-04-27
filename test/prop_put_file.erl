@@ -7,7 +7,7 @@
 prop_basic_write() ->
     ?FORALL(Data, non_empty(prop_generators:content()),
 	    begin
-		application:ensure_all_started(erlmemfs),
+		erlmemfs_file_sup:start_link(),
 		{ok, F} = erlmemfs_file_sup:create_erlmemfs_file(<<>>),
 		{ok, Ref} = erlmemfs_file:open(F),
 		done = erlmemfs_file:write_block(F, Ref, create_writer(Data)),

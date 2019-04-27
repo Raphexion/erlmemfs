@@ -4,10 +4,10 @@
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
-prop_test() ->
+prop_rename_test() ->
     ?FORALL({OrgName, NewName, Content}, test_data(),
 	    begin
-		application:ensure_all_started(erlmemfs),
+		erlmemfs_sup:start_link(),
 		{ok, F} = erlmemfs_sup:create_erlmemfs(),
 		{ok, OrgName} = erlmemfs:put_file(F, OrgName, Content),
 		{ok, Fp} = erlmemfs:get_file(F, OrgName),

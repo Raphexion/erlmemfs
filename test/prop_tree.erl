@@ -8,7 +8,7 @@
 prop_non_nested_tree_test() ->
     ?FORALL({Files, Folders}, unique_files_and_folders(),
 	    begin
-		application:ensure_all_started(erlmemfs),
+		erlmemfs_sup:start_link(),
 		{ok, Fs} = erlmemfs_sup:create_erlmemfs(),
 
 		create_folders(Fs, Folders),
