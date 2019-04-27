@@ -10,7 +10,8 @@
 	 write_block/3,
 	 write_block/4,
 	 read_block/3,
-	 read/1]).
+	 read/1,
+	 hash/1]).
 -export([debug/2]).
 
 %% Behaviour callbacks
@@ -49,6 +50,9 @@ read_block(Pid, Ref, NbBytes) ->
 
 read(Pid) ->
     gen_server:call(Pid, read).
+
+hash(Pid) ->
+    gen_server:call(Pid, hash).
 
 debug(Pid, DebugString) ->
     gen_server:call(Pid, {debug, DebugString}).
@@ -111,6 +115,9 @@ handle_call({read, Ref, NbBytes}, _From, State=#state{data=Data, refs=Refs}) ->
 	{ok, Bytes, RefState} ->
 	    {reply, {ok, Bytes}, State#state{refs=Refs#{Ref => RefState}}}
     end;
+
+handle_call(hash, _From, State=#state{data=Data}) ->
+    {reply, {ok, crypto:hash(sha256, Data)}, State};
 
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
