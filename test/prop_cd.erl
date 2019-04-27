@@ -51,6 +51,7 @@ test_paths(Fs, [Path|Rest]) ->
     Name = lists:last(string:tokens(Path, "/")),
     {ok, Name} =:= erlmemfs:change_directory(Fs, Path)
 	andalso {ok, Name} =:= erlmemfs:current_directory(Fs)
+	andalso {ok, Name} =:= erlmemfs:change_directory(Fs, ".")
 	andalso test_paths(Fs, Rest).
 
 %%%%%%%%%%%%%%%%%%
