@@ -1,6 +1,6 @@
 -module(prop_rename).
 -include_lib("proper/include/proper.hrl").
--import(prop_generators, [file/0, content/0]).
+-import(prop_generators, [file/0, folder/0, content/0]).
 
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
@@ -24,6 +24,15 @@ prop_rename_missing_file_test() ->
 		{error, file_missing} =:= erlmemfs:rename_file(Fs, OrgName, NewName)
 	    end).
 
+prop_rename_folder_collision_test() ->
+    ?FORALL({Folder, File}, unique_folder_file(),
+	    begin
+		erlmemfs_sup:start_link(),
+		{ok, F} = erlmemfs_sup:create_erlmemfs(),
+		{ok, Folder} = erlmemfs:make_directory(F, Folder),
+		{error, not_a_file} =:= erlmemfs:rename_file(F, Folder, File)
+	    end).
+
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
@@ -34,3 +43,6 @@ prop_rename_missing_file_test() ->
 
 unique_files() ->
     ?SUCHTHAT({OrgName, NewName}, {file(), file()}, OrgName /= NewName).
+
+unique_folder_file() ->
+    ?SUCHTHAT({OrgName, NewName}, {folder(), file()}, OrgName /= NewName).
