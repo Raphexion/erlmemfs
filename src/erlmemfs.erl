@@ -323,3 +323,13 @@ missing_folder_test() ->
 missing_folder_abs_test() ->
     {ok, Fs} = start_link(),
     ?assert({error, missing_folder} =:= change_directory(Fs, "/abc")).
+
+get_missing_file_test() ->
+    {ok, Fs} = start_link(),
+    ?assert({error, missing_file} =:= get_file(Fs, "abc.txt")).
+
+get_file_that_is_a_folder_test() ->
+    Name = "abc",
+    {ok, Fs} = start_link(),
+    {ok, Name} = make_directory(Fs, Name),
+    ?assert({error, target_is_dir} =:= get_file(Fs, Name)).
