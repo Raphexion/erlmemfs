@@ -333,3 +333,11 @@ get_file_that_is_a_folder_test() ->
     {ok, Fs} = start_link(),
     {ok, Name} = make_directory(Fs, Name),
     ?assert({error, target_is_dir} =:= get_file(Fs, Name)).
+
+remove_missing_file_test() ->
+    {ok, Fs} = start_link(),
+    ?assert({error, not_found} =:= remove_file(Fs, "abc.txt")).
+
+remove_missing_directory_test() ->
+    {ok, Fs} = start_link(),
+    ?assert({error, directory_missing} =:= remove_directory(Fs, "abc")).
