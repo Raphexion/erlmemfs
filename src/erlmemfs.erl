@@ -341,3 +341,16 @@ remove_missing_file_test() ->
 remove_missing_directory_test() ->
     {ok, Fs} = start_link(),
     ?assert({error, directory_missing} =:= remove_directory(Fs, "abc")).
+
+remove_file_that_is_folder_test() ->
+    Name = "abc",
+    {ok, Fs} = start_link(),
+    {ok, Name} = make_directory(Fs, Name),
+    ?assert({error, not_a_file} =:= remove_file(Fs, Name)).
+
+remove_directory_that_is_a_file_test() ->
+    erlmemfs_file_sup:start_link(),
+    Name = "abc",
+    {ok, Fs} = start_link(),
+    {ok, Name} = put_file(Fs, Name, <<>>),
+    ?assert({error, not_a_directory} =:= remove_directory(Fs, Name)).
