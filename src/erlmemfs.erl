@@ -168,14 +168,14 @@ handle_call({tree, Fun}, _From, CWD) ->
 
 handle_call({put_file, Name, Data}, _From, CWD=#dir{content=Content}) ->
     case maps:get(Name, Content, badkey) of
-	badkey ->
+	#dir{} ->
+	    {reply, {error, dir_collision}, CWD};
+	_ ->
+	    %% badkey or #file{}
+	    %% design decision: we will override an existing file
 	    {ok, Fp} = erlmemfs_file_sup:create_erlmemfs_file(Data),
 	    File = #file{name=Name, fp=Fp},
-	    {reply, {ok, Name}, CWD#dir{content=Content#{Name => File}}};
-	#file{} ->
-	    {reply, {error, file_collision}, CWD};
-	#dir{} ->
-	    {reply, {error, dir_collision}, CWD}
+	    {reply, {ok, Name}, CWD#dir{content=Content#{Name => File}}}
     end;
 
 handle_call({get_file, Name}, _From, CWD=#dir{content=Content}) ->
