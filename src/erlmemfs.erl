@@ -258,7 +258,6 @@ handle_info(_What, State) ->
 
 %% @hidden
 terminate(_Reason, State) ->
-    io:fwrite("TERMINATE WITH ~p~n", [State]),
     ok.
 
 %% @hidden
