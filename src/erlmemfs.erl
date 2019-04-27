@@ -194,7 +194,7 @@ handle_call({remove_file, Name}, _From, CWD=#dir{content=Content}) ->
 	badkey ->
 	    {reply, {error, not_found}, CWD};
 	#dir{} ->
-	    {reply, {error, not_directory}, CWD};
+	    {reply, {error, not_a_file}, CWD};
 	#file{fp=Fp} ->
 	    erlmemfs_file:stop(Fp),
 	    {reply, {ok, Name}, CWD#dir{content=maps:remove(Name, Content)}}
