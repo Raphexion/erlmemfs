@@ -354,3 +354,13 @@ remove_directory_that_is_a_file_test() ->
     {ok, Fs} = start_link(),
     {ok, Name} = put_file(Fs, Name, <<>>),
     ?assert({error, not_a_directory} =:= remove_directory(Fs, Name)).
+
+rename_file_to_file_that_already_exists_test() ->
+    erlmemfs_file_sup:start_link(),
+    OrgName = "abc.txt",
+    NewName = "def.txt",
+    {ok, Fs} = start_link(),
+    {ok, OrgName} = put_file(Fs, OrgName, <<1,2,3,4>>),
+    {ok, NewName} = put_file(Fs, NewName, <<1,2,3,4>>),
+
+    ?assert({error, collision} =:= rename_file(Fs, OrgName, NewName)).
