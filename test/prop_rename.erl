@@ -16,6 +16,14 @@ prop_rename_test() ->
 		{ok, Fp} =:= erlmemfs:get_file(F, NewName)
 	    end).
 
+prop_rename_missing_file_test() ->
+    ?FORALL({OrgName, NewName}, unique_files(),
+	    begin
+		erlmemfs_sup:start_link(),
+		{ok, Fs} = erlmemfs_sup:create_erlmemfs(),
+		{error, file_missing} =:= erlmemfs:rename_file(Fs, OrgName, NewName)
+	    end).
+
 %%%%%%%%%%%%%%%
 %%% Helpers %%%
 %%%%%%%%%%%%%%%
@@ -23,3 +31,6 @@ prop_rename_test() ->
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
+
+unique_files() ->
+    ?SUCHTHAT({OrgName, NewName}, {file(), file()}, OrgName /= NewName).
