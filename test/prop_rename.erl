@@ -1,11 +1,12 @@
 -module(prop_rename).
 -include_lib("proper/include/proper.hrl").
+-import(prop_generators, [file/0, content/0]).
 
 %%%%%%%%%%%%%%%%%%
 %%% Properties %%%
 %%%%%%%%%%%%%%%%%%
 prop_rename_test() ->
-    ?FORALL({OrgName, NewName, Content}, test_data(),
+    ?FORALL({OrgName, NewName, Content}, {file(), file(), file()},
 	    begin
 		erlmemfs_sup:start_link(),
 		{ok, F} = erlmemfs_sup:create_erlmemfs(),
@@ -22,6 +23,3 @@ prop_rename_test() ->
 %%%%%%%%%%%%%%%%%%
 %%% Generators %%%
 %%%%%%%%%%%%%%%%%%
-
-test_data() ->
-    {prop_generators:file(), prop_generators:file(), prop_generators:content()}.
