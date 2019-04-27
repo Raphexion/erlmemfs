@@ -36,6 +36,7 @@ init([]) ->
                  period => 1},
 
     ErlMemFs = #{id => erlmemfs,
+		 restart => transient,
 		 start => {erlmemfs, start_link, []}},
 
     Children = [ErlMemFs],

@@ -1,5 +1,6 @@
 -module(erlmemfs_file).
 -behaviour(gen_server).
+-include_lib("eunit/include/eunit.hrl").
 
 %% API
 
@@ -117,7 +118,7 @@ handle_call({read, Ref, NbBytes}, _From, State=#state{data=Data, refs=Refs}) ->
     end;
 
 handle_call(hash, _From, State=#state{data=Data}) ->
-    {reply, {ok, crypto:hash(sha256, Data)}, State};
+    {reply, {ok, erlmemfs_support:hexlify(crypto:hash(sha256, Data))}, State};
 
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
@@ -180,3 +181,21 @@ write_logic(State, Fun, From, Ref, [Ref]) ->
 
 write_logic(State, _Fun, _From, _, _) ->
     {reply, {error, busy}, State}.
+
+%% To convert the hash to a string that is more familiar
+
+%%-----------------------------------------------------------------------------
+%% Test
+%%------------------------------------------------------------------------------
+
+hash_test() ->
+    Name = "dormeur.txt",
+    Path = code:priv_dir(erlmemfs),
+    File = filename:join(Path, Name),
+    {ok, Content} = file:read_file(File),
+
+    {ok, Fp} = start_link(Content),
+
+    %% correct hash has calculated using the linux command sha256sum
+    Correct = "937d05a6f4ec8bc547cb2de9c1fd2376e19fc98c90462bcfc2133dc99709f068",
+    ?assert({ok, Correct} =:= hash(Fp)).

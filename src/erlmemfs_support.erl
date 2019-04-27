@@ -9,6 +9,7 @@
 	 path_to_parts/1,
 	 mkdirs/2,
 	 backup_dir/1]).
+-export([hexlify/1]).
 
 %% @doc root
 
@@ -116,3 +117,20 @@ backup_dir(CurrentDir) ->
 		    CurrentDir
 	    end
     end.
+
+%%
+
+nibblify(Bin) ->
+    nibblify(Bin, []).
+nibblify(<<>>, Acc) ->
+    lists:reverse(Acc);
+nibblify(<<N:4, R/bitstring>>, Acc) ->
+    nibblify(R, [N|Acc]).
+
+hex(C) when C < 10 ->
+    $0 + C;
+hex(C) ->
+    $a + C - 10.
+
+hexlify(Bin) when is_binary(Bin) ->
+    lists:map(fun hex/1, nibblify(Bin)).
