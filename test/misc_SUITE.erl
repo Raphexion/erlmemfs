@@ -6,6 +6,6 @@
 all() -> [test_erlmemfs_debug].
 
 test_erlmemfs_debug(_Config) ->
-    erlmemfs_sup:start_link(),
+    application:ensure_started(erlmemfs),
     {ok, Fs} = erlmemfs_sup:create_erlmemfs(),
     {ok, erlmemfs_support:root()} =:= erlmemfs:debug(Fs).
