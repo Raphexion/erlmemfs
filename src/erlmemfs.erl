@@ -1,6 +1,7 @@
 -module(erlmemfs).
 -behaviour(gen_server).
 -include("erlmemfs.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 
 %% API
@@ -257,7 +258,7 @@ handle_info(_What, State) ->
     {noreply, State}.
 
 %% @hidden
-terminate(_Reason, State) ->
+terminate(_Reason, _State) ->
     ok.
 
 %% @hidden
@@ -310,3 +311,15 @@ node_name(#file{name=Name}) ->
     {file, Name};
 node_name(#dir{name=Name}) ->
     {dir, Name}.
+
+%%-----------------------------------------------------------------------------
+%% Test
+%%------------------------------------------------------------------------------
+
+missing_folder_test() ->
+    {ok, Fs} = start_link(),
+    ?assert({error, missing_folder} =:= change_directory(Fs, "abc")).
+
+missing_folder_abs_test() ->
+    {ok, Fs} = start_link(),
+    ?assert({error, missing_folder} =:= change_directory(Fs, "/abc")).
