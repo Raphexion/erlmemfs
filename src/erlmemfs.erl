@@ -364,3 +364,15 @@ rename_file_to_file_that_already_exists_test() ->
     {ok, NewName} = put_file(Fs, NewName, <<1,2,3,4>>),
 
     ?assert({error, collision} =:= rename_file(Fs, OrgName, NewName)).
+
+cd_file_collision_test() ->
+    Name = "abc",
+    {ok, Fs} = start_link(),
+    {ok, Name} = put_file(Fs, Name, <<>>),
+    ?assert({error, target_is_file} =:= change_directory(Fs, Name)).
+
+cd_file_collision_abs_test() ->
+    Name = "abc",
+    {ok, Fs} = start_link(),
+    {ok, Name} = put_file(Fs, Name, <<>>),
+    ?assert({error, missing_folder} =:= change_directory(Fs, "/" ++ Name)).
