@@ -391,3 +391,25 @@ list_files_minimal_test() ->
     Res = [{file, "a"}, {file, "b"}, {file, "c"},
 	   {dir, "d"}, {dir, "e"}, {dir, "f"}],
     ?assert({ok, Res} =:= list_files(Fs)).
+
+list_files_in_folder_minimal_test() ->
+    {ok, Fs} = start_link(),
+
+    Folder = "sandbox",
+    {ok, Folder} = make_directory(Fs, Folder),
+    {ok, Folder} = change_directory(Fs, Folder),
+
+    {ok, "a"} = put_file(Fs, "a", <<>>),
+    {ok, "b"} = put_file(Fs, "b", <<>>),
+    {ok, "c"} = put_file(Fs, "c", <<>>),
+
+    {ok, "d"} = make_directory(Fs, "d"),
+    {ok, "e"} = make_directory(Fs, "e"),
+    {ok, "f"} = make_directory(Fs, "f"),
+
+    {ok, "/"} = change_directory(Fs, ".."),
+
+    Res = [{file, "a"}, {file, "b"}, {file, "c"},
+	   {dir, "d"}, {dir, "e"}, {dir, "f"}],
+
+    ?assert({ok, Res} =:= list_files(Fs, Folder)).
