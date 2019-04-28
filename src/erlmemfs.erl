@@ -376,3 +376,18 @@ cd_file_collision_abs_test() ->
     {ok, Fs} = start_link(),
     {ok, Name} = put_file(Fs, Name, <<>>),
     ?assert({error, target_is_file} =:= change_directory(Fs, "/" ++ Name)).
+
+list_files_minimal_test() ->
+    {ok, Fs} = start_link(),
+
+    {ok, "a"} = put_file(Fs, "a", <<>>),
+    {ok, "b"} = put_file(Fs, "b", <<>>),
+    {ok, "c"} = put_file(Fs, "c", <<>>),
+
+    {ok, "d"} = make_directory(Fs, "d"),
+    {ok, "e"} = make_directory(Fs, "e"),
+    {ok, "f"} = make_directory(Fs, "f"),
+
+    Res = [{file, "a"}, {file, "b"}, {file, "c"},
+	   {dir, "d"}, {dir, "e"}, {dir, "f"}],
+    ?assert({ok, Res} =:= list_files(Fs)).
