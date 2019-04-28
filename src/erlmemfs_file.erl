@@ -13,7 +13,6 @@
 	 read_block/3,
 	 read/1,
 	 hash/1]).
--export([debug/2]).
 
 %% Behaviour callbacks
 
@@ -55,9 +54,6 @@ read(Pid) ->
 hash(Pid) ->
     gen_server:call(Pid, hash).
 
-debug(Pid, DebugString) ->
-    gen_server:call(Pid, {debug, DebugString}).
-
 %%-----------------------------------------------------------------------------
 %% Behaviour callbacks
 %%------------------------------------------------------------------------------
@@ -70,10 +66,6 @@ debug(Pid, DebugString) ->
 
 init(Data) ->
     {ok, #state{data=Data}}.
-
-handle_call({debug, DebugString}, _From, State) ->
-    io:fwrite(DebugString, [State]),
-    {reply, ok, State};
 
 handle_call({close, Ref}, _From, State=#state{refs=Refs}) ->
     case maps:get(Ref, Refs, badkey) of
