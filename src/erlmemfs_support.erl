@@ -110,12 +110,8 @@ backup_dir(CurrentDir) ->
     Backup = path_to_parts(CurrentDir),
     fun(NewDir) ->
 	    Root = find_root(NewDir),
-	    case move_down(Root, Backup) of
-		{ok, Fresh} ->
-		    Fresh;
-		_ ->
-		    CurrentDir
-	    end
+	    {ok, Fresh} = move_down(Root, Backup),
+	    Fresh
     end.
 
 %%
