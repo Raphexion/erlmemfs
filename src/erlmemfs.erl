@@ -375,4 +375,4 @@ cd_file_collision_abs_test() ->
     Name = "abc",
     {ok, Fs} = start_link(),
     {ok, Name} = put_file(Fs, Name, <<>>),
-    ?assert({error, missing_folder} =:= change_directory(Fs, "/" ++ Name)).
+    ?assert({error, target_is_file} =:= change_directory(Fs, "/" ++ Name)).

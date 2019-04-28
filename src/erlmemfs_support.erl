@@ -66,7 +66,7 @@ move_down(CWD=#dir{content=Content}, [Head|Tail]) ->
 	badkey ->
 	    {error, missing_folder};
 	#file{} ->
-	    {error, missing_folder};
+	    {error, target_is_file};
 	Folder=#dir{} ->
 	    move_down(Folder#dir{parent=CWD}, Tail)
     end.
