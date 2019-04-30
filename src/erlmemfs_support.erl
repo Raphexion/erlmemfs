@@ -10,6 +10,7 @@
 	 mkdirs/2,
 	 backup_dir/1]).
 -export([hexlify/1]).
+-export([hash/1]).
 
 %% @doc root
 
@@ -130,3 +131,6 @@ hex(C) ->
 
 hexlify(Bin) when is_binary(Bin) ->
     lists:map(fun hex/1, nibblify(Bin)).
+
+hash(Data) ->
+    hexlify(crypto:hash(sha256, Data)).

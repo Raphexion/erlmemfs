@@ -110,7 +110,7 @@ handle_call({read, Ref, NbBytes}, _From, State=#state{data=Data, refs=Refs}) ->
     end;
 
 handle_call(hash, _From, State=#state{data=Data}) ->
-    {reply, {ok, erlmemfs_support:hexlify(crypto:hash(sha256, Data))}, State};
+    {reply, {ok, erlmemfs_support:hash(Data)}, State};
 
 handle_call(What, _From, State) ->
     {reply, {error, What}, State}.
