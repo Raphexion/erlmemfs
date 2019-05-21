@@ -10,7 +10,8 @@ all() -> [test_erlmemfs_debug,
 test_erlmemfs_debug(_Config) ->
     application:ensure_started(erlmemfs),
     {ok, Fs} = erlmemfs_sup:create_erlmemfs(),
-    {ok, erlmemfs_support:root()} =:= erlmemfs:debug(Fs).
+    Root = erlmemfs_support:root(),
+    {ok, Root} = erlmemfs:debug(Fs).
 
 test_close_file_with_bad_reference(_Config) ->
     application:ensure_started(erlmemfs),
