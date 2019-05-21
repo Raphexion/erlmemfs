@@ -6,7 +6,7 @@
 
 -record(file, {
 	       name :: string(),
-	       fp :: binary()
+	       fp :: pid()
 	      }).
 
 -define(ROOT, #dir{name="/", parent=none}).
