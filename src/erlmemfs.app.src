@@ -12,7 +12,6 @@
   {env,[]},
   {modules, []},
 
-  {maintainers, ["Niklas Johansson (raphexion@gmail.com)"]},
   {licenses, ["Apache 2.0"]},
   {links, [{"Github", "https://github.com/Raphexion/erlmemfs"}]}
  ]}.
