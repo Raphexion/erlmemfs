@@ -15,6 +15,22 @@ Getting Started
 ---------------
 
 ```sh
+rebar3 shell
+
+{ok, Fs} = erlmemfs_sup:create_erlmemfs().
+
+erlmemfs:make_directory(Fs, "my_folder").
+erlmemfs:change_directory(Fs, "my_folder").
+
+erlmemfs:put_file(Fs, "my_file", <<1,2,3,4>>).
+
+erlmemfs:list_files(Fs).
+```
+
+Testing and cover
+-----------------
+
+```sh
 rebar3 proper --cover
 rebar3 cover
 ```
