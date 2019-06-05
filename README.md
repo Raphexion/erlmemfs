@@ -5,7 +5,7 @@ erlmemfs
 ========
 
 A simple in-memory filesystem inspirered and intended to be used
-with Bifrost.
+with [Bifrost](https://github.com/ryancrum/bifrost).
 
 Use property testing to test functionality.
 
